@@ -1,10 +1,11 @@
 # Mathematische operationen
 ## expression
--
+- term ((PLUS|MINUS) term)*
+An expression looks for a term +/- a term
 ## term
--
+- factor ((MUL|DIV) factor)*
 ## factor
--
+- INT|FLOAT
 
 
 # Program (root)
@@ -15,11 +16,9 @@
 
 # Assign
 ## int
-### type
-- lol
+- name
+- BinOp
 ### name
--lol
--lol
+- string
 ### BinOp
-- lol
-- lol
+- term
