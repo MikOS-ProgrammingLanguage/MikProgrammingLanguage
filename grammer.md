@@ -16,5 +16,10 @@
 # Assign
 ## int
 ### type
+- lol
 ### name
+-lol
+-lol
 ### BinOp
+- lol
+- lol
