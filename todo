@@ -1,0 +1,12 @@
+=== TODO ===
+- add pointers
+- mikas
+
+=== DONE ===
+- Throw error for double variable decleration
+- variable overwrite (re-assignement)
+- String decleration
+- flt decleration
+- char decleration
+- int decleration
+- function calls

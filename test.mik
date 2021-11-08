@@ -1,0 +1,27 @@
+@section("test.mik")
+int a = 10
+int b = 20
+str bb
+int c = a+b
+str lol = "Hello"
+
+char character = 'c'
+
+flt ii = 10.5
+
+lol = "Not Hello Anymore"
+
+@debug
+@section("addTwoNumbers")
+mikf addTwoNumbers (int a, int bc) -> int {
+    int c = a+bc
+    str lol = "Hello World"
+    str HelloTwo = "Yaay wohoooooooo"
+    return lol
+}
+@secend
+
+int two_nums = addTwoNumbers(10, 20)
+int wtf = 0
+
+@secend

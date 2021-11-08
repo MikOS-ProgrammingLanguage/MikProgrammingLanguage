@@ -7,18 +7,18 @@ An expression looks for a term +/- a term
 ## factor
 - INT|FLOAT
 
+#       Assign
+    /       /     |      \
+  type identifier =  expression
+                          |
+                      NumberNode
+                          |
+                          2
+(int x = 2)
 
-# Program (root)
-
-
-# Logische Operationen
-
-
-# Assign
-## int
-- name
-- BinOp
-### name
-- string
-### BinOp
-- term
+# Statements
+## asign
+## if
+## while
+## try
+## catch
