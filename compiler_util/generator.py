@@ -21,3 +21,6 @@ class Generator:
 
     def __repr__(self) -> str:
         return "Why the fuck would you want to represent the code generator bro"
+
+def generate(input_pth, output_pth):
+    pass

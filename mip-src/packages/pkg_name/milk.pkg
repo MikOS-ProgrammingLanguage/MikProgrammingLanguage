@@ -1,0 +1,4 @@
+module-name: pkg_name
+external: https://github.com/JartC0ding/milk_test.git
+ignore-file: documentation.md
+ignore-file: another_documentation.md
