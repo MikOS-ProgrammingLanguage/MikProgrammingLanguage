@@ -1,4 +1,4 @@
-from os import name
+from preprocessor import *
 from lexer import *
 from error import *
 
@@ -58,7 +58,7 @@ class TypeNode:
         return f"{self.tok}"
 
 class IDNode:
-    def __init__(self, tok) -> None:
+    def __init__(self, var_name, tok) -> None:
         self.tok = tok
     
     def __repr__(self) -> str:
@@ -182,7 +182,8 @@ class Parser:
                 res = self.__mk_id()
                 self.__programm_node.add_node(res)
             elif self.__current_token.type_ == TT_DEBUG:
-                self.__programm_node.add_node()
+                self.__programm_node.add_node(DebugNode(TT_DEBUG))
+                self.__advance()
             else:
                 break
 
@@ -197,15 +198,15 @@ class Parser:
         
         elif tok.type_ in (TT_ID):
             if tok.value in self.VARS:
-                tok = self.VARS.get(tok.value)
-                tok = tok.value
+                tok2 = self.VARS.get(tok.value)
+                tok2 = tok.value
             elif tok.value in self.FUNCTIONS:
-                tok = self.VARS.get(tok.value)
-                tok = tok.value
+                tok2 = self.FUNCTIONS.get(tok.value)
+                tok2 = tok.value
             else:
                 NewError("RefferencedBeforeAssignement", f"The variable '{tok.value}' is refferenced but not assigned!")
             self.__advance()
-            return IDNode(tok)
+            return IDNode(tok.value, tok2)
         elif tok.type_ in (TT_STRING): 
             self.__advance()
             return StrNode(tok)
@@ -411,10 +412,12 @@ parser = Parser(lexer.lex())
 root = parser.parse()
 print(root.nodes[0])
 """
-with open("./test.mik", "r") as f:
-    cntnt = f.read()
+#with open("../test.mik", "r") as f:
+#    cntnt = f.read()
 
-lexer = Lexer(cntnt)
-parser = Parser(lexer.lex())
-root = parser.parse()
-print(root.nodes)
+#processed = preprocess(cntnt, "test.mik")
+#lexer, sections = Lexer(processed).lex()
+#print(sections)
+#parser = Parser(lexer)
+#root = parser.parse()
+#print(root.nodes)

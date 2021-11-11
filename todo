@@ -1,6 +1,7 @@
 === TODO ===
 - add pointers
 - mikas
+- sec-ignore(section names, and more section names to ignore)
 
 === DONE ===
 - Throw error for double variable decleration

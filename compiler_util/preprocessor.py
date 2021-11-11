@@ -10,9 +10,9 @@ mip_src_path = src_path+"/mip-src/packages"
 PKG_PREPROCESS_FLAG = False
 PKG_NAME = ""
 
-def preprocess(text: str) -> str:
+def preprocess(text: str, start_file: str) -> str:
     global PKG_PREPROCESS_FLAG, PKG_NAME
-    new_text = ""
+    new_text = f"@section(\"{start_file}\")\n"
     for i in text.split("\n"):
         if i.startswith("#yoink <") and i.endswith(">"):
             i2 = i.split("#yoink <")
@@ -22,6 +22,7 @@ def preprocess(text: str) -> str:
             if fname in yoinked_files:
                 continue
             with open(fname, "r")as file:
+                new_text += f"@section(\"{fname}\")"
                 content = file.read()
                 content = content.split("\n")
                 content2 = ""
@@ -34,6 +35,7 @@ def preprocess(text: str) -> str:
                 new_content = preprocess(content2)
                 yoinked_files.append(fname)
             new_text += new_content
+            new_text += "@secend"
         elif i.startswith("#yoink-src <") and i.endswith(">"):
             i2 = i.split("#yoink-src <")
             fname = (i2[1].split(">"))[0]
@@ -59,7 +61,8 @@ def preprocess(text: str) -> str:
         else:
             new_text += i
         new_text += "\n"
-
+    new_text = new_text[0:len(new_text)-1]
+    new_text += "@secend"
     return new_text
 """
 TODO

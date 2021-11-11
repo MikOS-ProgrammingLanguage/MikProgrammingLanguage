@@ -57,6 +57,7 @@ class Lexer:
     
     def lex(self):
         tokens = []
+        sections = []
         while self.__current_char != None:
             if self.__current_char in " \t\n":
                 if self.__current_char == "\n":
@@ -64,15 +65,15 @@ class Lexer:
                 self.__advance()
             
             elif self.__current_char == "+":
-                tokens.append(Token(TT_PLUS, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_PLUS, self.__sec.section, self.__sec.ln_cnt, "+"))
                 self.__advance()
             
             elif self.__current_char == "*":
-                tokens.append(Token(TT_MUL, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_MUL, self.__sec.section, self.__sec.ln_cnt, "*"))
                 self.__advance()
             
             elif self.__current_char == "/":
-                tokens.append(Token(TT_DIV, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_DIV, self.__sec.section, self.__sec.ln_cnt, "/"))
                 self.__advance()
             
             elif self.__current_char in NUMBERS:
@@ -82,7 +83,7 @@ class Lexer:
                 tokens.append(self.__make_id())
             
             elif self.__current_char == "=":
-                tokens.append(Token(TT_ASSGN, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_ASSGN, self.__sec.section, self.__sec.ln_cnt, "="))
                 self.__advance()
             
             elif self.__current_char == "\"":
@@ -94,32 +95,32 @@ class Lexer:
                 self.__advance()
             
             elif self.__current_char == "(":
-                tokens.append(Token(TT_LPAREN, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_LPAREN, self.__sec.section, self.__sec.ln_cnt, "("))
                 self.__advance()
             
             elif self.__current_char == ")":
-                tokens.append(Token(TT_RPAREN, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_RPAREN, self.__sec.section, self.__sec.ln_cnt, ")"))
                 self.__advance()
             
             elif self.__current_char == "{":
-                tokens.append(Token(TT_LCURL, self.__sec.section, self.__sec.ln_cnt, self.__sec))
+                tokens.append(Token(TT_LCURL, self.__sec.section, self.__sec.ln_cnt,"{"))
                 self.__advance()
             
             elif self.__current_char == "}":
-                tokens.append(Token(TT_RCURL, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_RCURL, self.__sec.section, self.__sec.ln_cnt, "}"))
                 self.__advance()
             
             elif self.__current_char == ",":
-                tokens.append(Token(TT_COMMA, self.__sec.section, self.__sec.ln_cnt))
+                tokens.append(Token(TT_COMMA, self.__sec.section, self.__sec.ln_cnt, ","))
                 self.__advance()
             
             elif self.__current_char == "-":
                 self.__advance()
                 if self.__current_char == ">":
-                    tokens.append(Token(TT_ARROW, self.__sec.section, self.__sec.ln_cnt))
+                    tokens.append(Token(TT_ARROW, self.__sec.section, self.__sec.ln_cnt, "->"))
                     self.__advance()
                 else:
-                    tokens.append(Token(TT_MINUS, self.__sec.section, self.__sec.ln_cnt))
+                    tokens.append(Token(TT_MINUS, self.__sec.section, self.__sec.ln_cnt, "-"))
 
             elif self.__current_char == "@":
                 self.__advance()
@@ -146,6 +147,7 @@ class Lexer:
                                         if self.__sec.ln_cnt > 1:
                                             self.__sec.ln_cnt -= 1
                                     self.__sec = Position(prev=self.__sec ,section=sec_name)
+                                    sections.append(sec_name)
                                     self.__advance()
                                 else:
                                     NewError("ParenteseNotClosed", "In a compiler flag, a closing parentese was expected")
@@ -170,7 +172,7 @@ class Lexer:
         #    print(i)
         #    print()
         tokens.append(Token(TT_EOF, "none", "none"))
-        return tokens
+        return tokens, sections
 
     def __make_char(self):
         self.__advance()
