@@ -1,4 +1,4 @@
-int a = 10
+int * a = 10
 int b = 20
 str bb
 int c = a+b

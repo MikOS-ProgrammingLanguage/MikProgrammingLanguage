@@ -78,8 +78,9 @@ class UnaryOpNode:
         pass
 
 class AsignmentNode:
-    def __init__(self, type_, name, op=None, value=None) -> None:
+    def __init__(self, type_, pointer, name, op=None, value=None) -> None:
         self.type_ = type_
+        self.pointer = pointer
         self.name = name
         self.value = value
         self.op = op
@@ -98,13 +99,13 @@ class ArgBlockNode:
 
 class CodeBlock:
     def __init__(self) -> None:
-        self.__code_bl_list = []
+        self.code_bl_list = []
 
     def add_arg(self, node):
-        self.__code_bl_list.append(node)
+        self.code_bl_list.append(node)
     
     def __repr__(self) -> str:
-        return f"{self.__code_bl_list}"
+        return f"{self.code_bl_list}"
 
 class FunctionNode:
     def __init__(self, function_name, return_type, arg_block: ArgBlockNode, code_block: CodeBlock) -> None:
@@ -137,6 +138,12 @@ class FunctionCall:
     
     def __repr__(self) -> str:
         return f"({self.func_name} {self.args})"
+
+class ReturnNode:
+    def __init__(self, tok) -> None:
+        self.tok = tok
+    def __repr__(self) -> str:
+        return f"RETURN: {self.tok}"
 
 # NODES END
 
@@ -230,6 +237,11 @@ class Parser:
         return left
     def __assign(self, type_):
         self.__advance()
+        if self.__current_token.type_ == TT_MUL:
+            pointer = True
+            self.__advance()
+        else:
+            pointer = False
         if self.__current_token.type_ == TT_ID:
             name = self.__current_token.value
             if name in self.VARS:
@@ -266,22 +278,24 @@ class Parser:
                         if len_args != len(new_block):
                             NewError("ParameterExpectedError", f"{len_args} args were expected but {len(new_block)} args were found!", f"-> Section {new_block[0].tok.section} at Line {new_block[0].tok.ln_count}")
                         else:
-                            return AsignmentNode(type_, name, asgn_op, FunctionCall(f_name, new_block))
+                            return AsignmentNode(type_, pointer, name, asgn_op, FunctionCall(f_name, new_block))
                 else:
                     value = self.__expr()
-                    self.VARS.update({name:AsignmentNode(type_, name, asgn_op, value)})
-                    return AsignmentNode(type_, name, asgn_op, value)
+                    self.VARS.update({name:AsignmentNode(type_, pointer, name, asgn_op, value)})
+                    return AsignmentNode(type_, pointer, name, asgn_op, value)
             else:
-                self.VARS.update({name:AsignmentNode(type_, name)})
-                return AsignmentNode(type_, name)
+                self.VARS.update({name:AsignmentNode(type_, pointer, name)})
+                return AsignmentNode(type_, pointer, name)
     def __call_or_refference(self):
         call = self.__current_token
         call_name = self.__current_token.value
+        print(call)
 
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
         else:
             self.__advance()
+            print(self.__current_token)
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:
                 value = self.FUNCTIONS.get(call_name)
                 len_args = len(value.arg_block.bool_bl_list)
@@ -314,11 +328,14 @@ class Parser:
                 else:
                     NewError("TypeMissmatchException", f"The variable you are trying to assign has type: {(self.VARS.get(call_name)).type_} but you tried to assign: {self.__current_token.type_.lower()}")
                 self.__advance()
+            elif call.value == "return":
+                node = ReturnNode(self.__factor())
             elif self.__current_token.type_ not in (TT_LPAREN, TT_ASSGN, TT_EOF, TT_LCURL, TT_RCURL, TT_INT, TT_COMMA, TT_FLOAT, TT_STRING, TT_CHAR):
                 if self.__current_token.value in self.VARS:
-                    inf = self.VARS.get(self.__current_token.value)
-                    inf = inf.value
-                    node = ReferenceNode(inf)
+                    #inf = self.VARS.get(self.__current_token.value)
+                    #inf = inf.value
+                    #node = ReferenceNode(inf)
+                    node = IDNode(self.__current_token.value, self.__current_token.value)
                 else:
                     NewError("VarOrFunctionNotFound", f"The var name refferenced is not defined: {self.__current_token}")
                 self.__advance()
