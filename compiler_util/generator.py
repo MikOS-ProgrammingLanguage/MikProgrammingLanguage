@@ -1,8 +1,8 @@
 import time
-from parser import RootNode
-from preprocessor import *
-from lexer import *
-from parser import *
+from compiler_util.parser import RootNode
+from compiler_util.preprocessor import *
+from compiler_util.lexer import *
+from compiler_util.parser import *
 
 class Generator:
     def __init__(self, Root: RootNode) -> None:
@@ -67,6 +67,8 @@ class Generator:
         elif type(node) == FunctionCall:
             code_ = str(self.__generate_f_call(node))
             return code_, self.is_n_main
+        else:
+            NewError("Ok you fucked with the compiler. STOP IT!")
 
     def __generate_int_asgn(self, node):
         code_ = "int"

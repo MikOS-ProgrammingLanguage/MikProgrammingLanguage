@@ -1,4 +1,4 @@
-from error import NewError
+from compiler_util.error import NewError
 
 
 CHARS      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"

@@ -1,6 +1,6 @@
-from preprocessor import *
-from lexer import *
-from error import *
+from compiler_util.preprocessor import *
+from compiler_util.lexer import *
+from compiler_util.error import *
 
 TYPES = [
     "int",
