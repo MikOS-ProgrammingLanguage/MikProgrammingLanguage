@@ -14,6 +14,7 @@ INSTRUCTIONS = [
     "str",
     "char",
     "mikf",
+    "mikas",
     "struct",
     "bool"
 ]
@@ -113,6 +114,16 @@ class FunctionNode:
         self.ret_type = return_type
         self.arg_block = arg_block
         self.code_block = code_block
+    
+    def __repr__(self) -> str:
+        return f"({self.func_name} ({self.arg_block}) -> {self.ret_type} {self.code_block})"
+
+class AssemblyNode:
+    def __init__(self, function_name, return_type, arg_block: ArgBlockNode, asm) -> None:
+        self.func_name = function_name
+        self.ret_type = return_type
+        self.arg_block = arg_block
+        self.code_block = asm
     
     def __repr__(self) -> str:
         return f"({self.func_name} ({self.arg_block}) -> {self.ret_type} {self.code_block})"
@@ -289,13 +300,11 @@ class Parser:
     def __call_or_refference(self):
         call = self.__current_token
         call_name = self.__current_token.value
-        print(call)
 
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
         else:
             self.__advance()
-            print(self.__current_token)
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:
                 value = self.FUNCTIONS.get(call_name)
                 len_args = len(value.arg_block.bool_bl_list)
@@ -398,6 +407,60 @@ class Parser:
             self.VARS = old_vars
             self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block)})
             return FunctionNode(func_name, ret_type, bool_block_node, code_block)
+    def __mikas(self):
+        self.__advance()
+        func_name = ""
+        if self.__current_token.type_ == "ID" and self.__current_token.value not in self.VARS and self.__current_token.value not in self.FUNCTIONS and self.__current_token.value not in INSTRUCTIONS:
+            func_name = self.__current_token.value
+            ret_type = ""
+            self.__advance()
+            if self.__current_token.type_ == TT_LPAREN:
+                old_vars = self.VARS
+                self.VARS = {}
+                self.__advance()
+                bool_block_node = ArgBlockNode()
+                while self.__current_token.type_ != TT_RPAREN:
+                    tok = self.__current_token
+                    next_tok = self.__get_token(2)
+                    next_next_tok = self.__get_token(3)
+                    if next_tok.type_ == TT_COMMA and next_next_tok.value not in (TYPES):
+                        NewError("TypeExpectedError", f"A comma was found hence another type decleration was expected but not found! {self.__current_token}")
+                    else:
+                        if tok.value == "int":
+                            node = self.__assign(tok.value)
+                        elif tok.value == "flt":
+                            node = self.__assign(tok.value)
+                        elif tok.value == "str":
+                            node = self.__assign(tok.value)
+                        elif tok.value == "char":
+                            node = self.__assign(tok.value)
+                        elif tok.type_ == "COMMA":
+                            self.__advance()
+                            continue
+                        else:
+                            NewError("InvalidTypeError", f"You specified an invalid type in function decleration: {self.__current_token}")
+                        bool_block_node.add_arg(node)
+                self.__advance()
+                if self.__current_token.type_ == TT_ARROW:
+                    self.__advance()
+                    if self.__current_token.value in TYPES:
+                        ret_type = self.__current_token.value
+                        self.__advance()
+                    else:
+                        NewError("NoReturnTypeFoundError", "There was a return type expected but not found")
+                else:
+                    ret_type = "void"
+                if self.__current_token.type_ == TT_LCURL:
+                    self.__func_on = True
+                    self.__advance()
+                    asm_code = self.__current_token.value
+                    self.__advance()
+                    self.__func_on = False
+                else:
+                    NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            self.VARS = old_vars
+            self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
+            return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
 
     def __mk_id(self):
         tok = self.__current_token
@@ -417,6 +480,8 @@ class Parser:
             node = self.__mikf()
         elif tok.value == "struct":
             pass
+        elif tok.value == "mikas":
+            node = self.__mikas()
         else:
             node = self.__call_or_refference()
         return node

@@ -1,6 +1,5 @@
 === TODO ===
-- add pointers
-- mikas
+- add derefferencers (&)
 - sec-ignore(section names, and more section names to ignore)
 
 === DONE ===
@@ -11,3 +10,5 @@
 - char decleration
 - int decleration
 - function calls
+- mikas
+- add pointers

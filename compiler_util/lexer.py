@@ -1,27 +1,28 @@
 from error import NewError
 
 
-CHARS     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
-NUMBERS   = "0123456789"
+CHARS      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+NUMBERS    = "0123456789"
 
-TT_PLUS   = "PLS"
-TT_MINUS  = "MIN"
-TT_MUL    = "MUL"
-TT_DIV    = "DIV"
-TT_INT    = "INT"
-TT_FLOAT  = "FLT"
-TT_ID     = "ID"
-TT_STRING = "STR"
-TT_CHAR   = "CHAR"
-TT_ASSGN  = "ASSGN"
-TT_LPAREN = "LPAREN"
-TT_RPAREN = "RPAREN"
-TT_LCURL  = "LCURL"
-TT_RCURL  = "RCURL"
-TT_COMMA  = "COMMA"
-TT_ARROW  = "ARROW"
-TT_DEBUG  = "DEBUG"
-TT_EOF    = "EOF"
+TT_PLUS    = "PLS"
+TT_MINUS   = "MIN"
+TT_MUL     = "MUL"
+TT_DIV     = "DIV"
+TT_INT     = "INT"
+TT_FLOAT   = "FLT"
+TT_ID      = "ID"
+TT_STRING  = "STR"
+TT_CHAR    = "CHAR"
+TT_ASSGN   = "ASSGN"
+TT_LPAREN  = "LPAREN"
+TT_RPAREN  = "RPAREN"
+TT_LCURL   = "LCURL"
+TT_RCURL   = "RCURL"
+TT_COMMA   = "COMMA"
+TT_ARROW   = "ARROW"
+TT_PERCENT = "PERCENT"
+TT_DEBUG   = "DEBUG"
+TT_EOF     = "EOF"
 
 class Position:
     def __init__(self, prev=None, section=None) -> None:
@@ -49,6 +50,8 @@ class Lexer:
         self.__pos: int = -1
         self.__current_char: chr = None
         self.__sec: Position = None
+        self.__expect_mikas = False
+        self.__in_mikas = False
         self.__advance()
 
     def __advance(self):
@@ -59,11 +62,19 @@ class Lexer:
         tokens = []
         sections = []
         while self.__current_char != None:
-            if self.__current_char in " \t\n":
+            if self.__in_mikas:
+                tokens.append(self.__make_str())
+                self.__advance()
+                self.__in_mikas = False
+            elif self.__current_char in " \t\n":
                 if self.__current_char == "\n":
                     self.__sec.ln_cnt += 1
                 self.__advance()
             
+            elif self.__current_char == "%":
+                tokens.append(Token(TT_PLUS, self.__sec.section, self.__sec.ln_cnt, "%"))
+                self.__advance()
+
             elif self.__current_char == "+":
                 tokens.append(Token(TT_PLUS, self.__sec.section, self.__sec.ln_cnt, "+"))
                 self.__advance()
@@ -103,6 +114,9 @@ class Lexer:
                 self.__advance()
             
             elif self.__current_char == "{":
+                if self.__expect_mikas:
+                    self.__in_mikas = True
+                    self.__expect_mikas = False
                 tokens.append(Token(TT_LCURL, self.__sec.section, self.__sec.ln_cnt,"{"))
                 self.__advance()
             
@@ -189,11 +203,26 @@ class Lexer:
 
     def __make_str(self):
         mk_str = ""
-        self.__advance()
-        while self.__current_char != None and self.__current_char != "\"":
-            mk_str += self.__current_char
+        if self.__in_mikas:
+            cnt = 0
+            while self.__current_char != None and self.__current_char != "}":
+                if self.__current_char == "\n" and cnt > 0:
+                    mk_str += ";"
+                elif self.__current_char == "\n" and cnt <= 0:
+                    None
+                elif self.__current_char == "\t":
+                    None
+                else:
+                    mk_str += self.__current_char
+                self.__advance()
+                cnt += 1
+            return Token(TT_STRING, self.__sec.section, self.__sec.ln_cnt, mk_str)
+        else:
             self.__advance()
-        return Token(TT_STRING, self.__sec.section, self.__sec.ln_cnt, mk_str)
+            while self.__current_char != None and self.__current_char != "\"":
+                mk_str += self.__current_char
+                self.__advance()
+            return Token(TT_STRING, self.__sec.section, self.__sec.ln_cnt, mk_str)
 
     def __make_number(self):
         num_str = ""
@@ -219,5 +248,5 @@ class Lexer:
         while self.__current_char != None and self.__current_char in CHARS+NUMBERS:
             id_str += self.__current_char
             self.__advance()
-
+        if id_str == "mikas": self.__expect_mikas = True
         return Token(TT_ID, self.__sec.section, self.__sec.ln_cnt, str(id_str))

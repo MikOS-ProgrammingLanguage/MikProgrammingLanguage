@@ -1,4 +1,4 @@
-int * a = 10
+int a = 10
 int b = 20
 str bb = "Hello "
 str cc = "World!"
@@ -10,3 +10,9 @@ mikf add(int a, int b) -> int {
 }
 
 int wtf = add(1, 20)
+mikas add_lol(int a, int b) -> int {
+	addq %rdi, %rsi
+	movq %rdi, %rax
+	ret
+}
+int wohooo = 1

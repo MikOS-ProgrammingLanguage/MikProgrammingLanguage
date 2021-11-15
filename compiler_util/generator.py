@@ -11,7 +11,7 @@ class Generator:
         self.is_in_arg_parse = False
 
     def generate(self):
-        c_code = ""
+        c_code = "int main(void) {"
         is_n_main_code = ""
         # iterate through all nodes and generate code for them
         for i in self.root_node.nodes:
@@ -20,6 +20,7 @@ class Generator:
                 is_n_main_code += str(code[0])
             else:
                 c_code += str(code[0])
+        c_code += "}"
         return is_n_main_code+c_code
 
     def __gen(self, node, ign_bin_op=False):
@@ -60,8 +61,12 @@ class Generator:
         elif type(node) == FunctionNode:
             code_ = self.__generate_func(node)
             return code_, True
+        elif type(node) == AssemblyNode:
+            code_ = self.__generate_asm(node)
+            return code_, True
         elif type(node) == FunctionCall:
-            pass
+            code_ = str(self.__generate_f_call(node))
+            return code_, self.is_n_main
 
     def __generate_int_asgn(self, node):
         code_ = "int"
@@ -99,9 +104,9 @@ class Generator:
         code_ = "char* "
         code_ += node.name
         if node.value != None:
-            code_ += f" {node.op} "
+            code_ += f" {node.op} \""
             code_ += str(self.__gen(node.value, True)[0])
-            code_ += ";\n"
+            code_ += "\";\n"
             return code_
         else:
             if self.is_in_arg_parse:
@@ -127,12 +132,30 @@ class Generator:
             return code_
 
 
+    def __generate_f_call(self, node):
+        f_call_str = f"{node.func_name}("
+        temp_args = []
+        for i in node.args:
+            temp_args.append(str(self.__gen(i)[0]))
+            temp_args.append(",")
+        del temp_args[len(temp_args)-1]
+        for i in temp_args:
+            f_call_str += i
+        f_call_str += ")"
+        return f_call_str
+        
+
     def __generate_func(self, node):
         self.is_n_main = True
         self.is_in_arg_parse = True
         func_str = f"{node.ret_type} {node.func_name} ("
+        temp_args = []
         for i in node.arg_block.bool_bl_list:
-            func_str += str(self.__gen(i)[0])
+            temp_args.append(str(self.__gen(i)[0]))
+            temp_args.append(",")
+        del temp_args[len(temp_args)-1]
+        for i in temp_args:
+            func_str += i
         self.is_in_arg_parse = False
         func_str += ") {"
         for b in node.code_block.code_bl_list:
@@ -140,7 +163,23 @@ class Generator:
         func_str += "}\n"
         self.is_n_main = False
         return func_str
-
+    def __generate_asm(self, node):
+        self.is_n_main = True
+        self.is_in_arg_parse = True
+        asm_func_str = f"__attribute__((naked)) {node.ret_type} {node.func_name} ("
+        temp_args = []
+        for i in node.arg_block.bool_bl_list:
+            temp_args.append(str(self.__gen(i)[0]))
+            temp_args.append(",")
+        del temp_args[len(temp_args)-1]
+        for i in temp_args:
+            asm_func_str += i
+        self.is_in_arg_parse = False
+        asm_func_str += ") { __asm__ __volatile__ (\""
+        asm_func_str += node.code_block
+        asm_func_str += "\");}\n"
+        self.is_n_main = False
+        return asm_func_str
 
     def __bin_op_node(self, node):
         left_c  = self.__gen(node.left_node)[0]
@@ -153,13 +192,15 @@ class Generator:
 
 def generate(input_pth, output_pth):
     start = time.time()
-    with open(input_pth[1], "r") as file:
-        content = file.read()
+    with open(input_pth[1], "r") as f:
+        content = f.read()
+        f.close()
     preprocessed = preprocess(content, input_pth[1])
     lexed, sections = Lexer(preprocessed).lex()
     parsed = Parser(lexed).parse()
-    print(parsed)
     g = Generator(parsed).generate()
-    print(g)
+    with open(output_pth[1]+".c", "w") as wf:
+        wf.write(g)
+        wf.close()
     end = time.time()
-    print(end-start)
+    print(f"File: {output_pth[1]}.c succesfully created in {end-start} seconds")
