@@ -8,14 +8,6 @@ An expression looks for a term +/- a term
 - INT|FLOAT
 
 #       Assign
-    /       /     |      \
-  type identifier =  expression
-                          |
-                      NumberNode
-                          |
-                          2
-(int x = 2)
-
 # Statements
 ## asign
 ## if
