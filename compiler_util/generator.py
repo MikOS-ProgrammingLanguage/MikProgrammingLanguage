@@ -21,7 +21,10 @@ class Generator:
             else:
                 c_code += str(code[0])
         c_code += "}"
-        return is_n_main_code+c_code
+        if c_code == "int main(void) {}":
+            return is_n_main_code
+        else:
+            return is_n_main_code+c_code
 
     def __gen(self, node, ign_bin_op=False):
         code_ = None
