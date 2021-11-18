@@ -171,7 +171,8 @@ class Generator:
         for i in node.arg_block.bool_bl_list:
             temp_args.append(str(self.__gen(i)[0]))
             temp_args.append(",")
-        del temp_args[len(temp_args)-1]
+        if temp_args != []:
+            del temp_args[len(temp_args)-1]
         for i in temp_args:
             asm_func_str += i
         self.is_in_arg_parse = False
