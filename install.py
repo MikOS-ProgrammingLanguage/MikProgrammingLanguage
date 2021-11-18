@@ -1,5 +1,7 @@
+import os
+
 if __name__=="__main__":
-    fpath = input("Installation Path(absolute) >>")
+    fpath = os.getcwd()
     fpath = fpath.replace("\\", "/")
     with open("config.py", "w") as file:
         file.write(f"src_path = '{fpath}'")
@@ -11,4 +13,4 @@ if __name__=="__main__":
         file.write(f"src_path = '{fpath}'")
         file.close()
     print(f"Config has been updated succesfully to: '{fpath}'")
-    input()
+    input("PRESS ENTER")

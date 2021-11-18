@@ -10,9 +10,22 @@ mip_src_path = src_path+"/mip-src/packages"
 PKG_PREPROCESS_FLAG = False
 PKG_NAME = ""
 
-def preprocess(text: str, start_file: str) -> str:
+def preprocess(text: str, start_file: str=None, start_f: bool=True) -> str:
     global PKG_PREPROCESS_FLAG, PKG_NAME
-    new_text = f"@section(\"{start_file}\")\n"
+    new_text = ""
+
+    if start_f:
+        start_file = start_file.replace("\\", "/")
+        splt_f = start_file.split("/")
+        w_dir = splt_f[0:(len(splt_f)-1)]
+
+        new_w_str = ""
+        for i in w_dir:
+            new_w_str += i
+
+        w_dir = os.getcwd()+"\\"+new_w_str
+        start_file = splt_f[len(splt_f)-1]
+        new_text += f"@section(\"{start_file}\")\n"
     for i in text.split("\n"):
         if i.startswith("#yoink <") and i.endswith(">"):
             i2 = i.split("#yoink <")
@@ -21,21 +34,20 @@ def preprocess(text: str, start_file: str) -> str:
                 fname = mip_src_path+"/"+PKG_NAME+"/"+fname
             if fname in yoinked_files:
                 continue
-            with open(fname, "r")as file:
-                new_text += f"@section(\"{fname}\")"
+            with open(w_dir+"\\"+fname, "r")as file:
+                new_text += f"@section(\"{fname}\")\n"
                 content = file.read()
                 content = content.split("\n")
                 content2 = ""
                 for i in content:
-                    if (i.startswith("mikf") or i.startswith("mikcls") or i.startswith("const")) and i in text:
+                    if (i.startswith("mikf") or i.startswith("const")) and i in text:
                         content2 += (i+" owt")
                     else:
                         content2 += i
                     content2 += "\n"
-                new_content = preprocess(content2)
+                new_content = preprocess(content2, start_f=False)
                 yoinked_files.append(fname)
             new_text += new_content
-            new_text += "@secend"
         elif i.startswith("#yoink-src <") and i.endswith(">"):
             i2 = i.split("#yoink-src <")
             fname = (i2[1].split(">"))[0]
@@ -53,7 +65,7 @@ def preprocess(text: str, start_file: str) -> str:
                     content2 += "\n"
                 PKG_PREPROCESS_FLAG = True
                 PKG_NAME = fname
-                new_content = preprocess(content2)
+                new_content = preprocess(content2, start_f=False)
                 PKG_PREPROCESS_FLAG = False
                 PKG_NAME = ""
                 yoinked_files_src.append(fname)

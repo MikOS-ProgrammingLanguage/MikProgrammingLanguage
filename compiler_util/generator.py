@@ -85,7 +85,6 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-
     def __generate_flt(self, node):
         code_ = "float"
         code_ += "* " if node.pointer else " "
@@ -101,7 +100,6 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-
     def __generate_str_asgn(self, node):
         code_ = "char* "
         code_ += node.name
@@ -116,7 +114,6 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-
     def __generate_char(self, node):
         code_ = "char"
         code_ += "* " if node.pointer else " "
@@ -155,11 +152,12 @@ class Generator:
         for i in node.arg_block.bool_bl_list:
             temp_args.append(str(self.__gen(i)[0]))
             temp_args.append(",")
-        del temp_args[len(temp_args)-1]
+        if temp_args != []:
+            del temp_args[len(temp_args)-1]
         for i in temp_args:
             func_str += i
         self.is_in_arg_parse = False
-        func_str += ") {"
+        func_str += ") {\n"
         for b in node.code_block.code_bl_list:
             func_str += str(self.__gen(b)[0])
         func_str += "}\n"
@@ -194,6 +192,7 @@ class Generator:
 
 def generate(input_pth, output_pth):
     start = time.time()
+    print(input_pth[1])
     with open(input_pth[1], "r") as f:
         content = f.read()
         f.close()

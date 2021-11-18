@@ -1,3 +1,6 @@
+#yoink <test_f.milk>
+#yoink-src <git_pkg>
+
 int a = 10
 int b = 20
 str bb = "Hello "

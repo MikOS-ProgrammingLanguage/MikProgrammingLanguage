@@ -16,7 +16,10 @@ INSTRUCTIONS = [
     "mikf",
     "mikas",
     "struct",
-    "bool"
+    "bool",
+    "if",
+    "else",
+    "elif"
 ]
 
 # NODES
@@ -64,6 +67,18 @@ class IDNode:
     
     def __repr__(self) -> str:
         return f"{self.tok}"
+
+class BoolNode:
+    pass
+
+class IfNode:
+    pass
+
+class ElseNode:
+    pass
+
+class ElifNode:
+    pass
 
 class BinOpNode:
     def __init__(self, left_node, op_tok, right_node) -> None:
@@ -461,6 +476,13 @@ class Parser:
             self.VARS = old_vars
             self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
             return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
+
+    def __if(self):
+        pass
+    def __else(self):
+        pass
+    def __elif(self):
+        pass
 
     def __mk_id(self):
         tok = self.__current_token
