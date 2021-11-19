@@ -5,10 +5,12 @@ CHARS      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
 NUMBERS    = "0123456789"
 
 
-TT_LTHEN   = ""
-TT_GTHEN   = ""
-TT_LEQ     = ""
-TT_GEQ     = ""
+TT_LTHEN   = "LTHEN"
+TT_GTHEN   = "GTHEN"
+TT_LEQ     = "LEQ"
+TT_GEQ     = "GEQ"
+
+TT_KAND = "KAND"
 
 TT_PLUS    = "PLS"
 TT_MINUS   = "MIN"
@@ -79,7 +81,7 @@ class Lexer:
                 self.__advance()
             
             elif self.__current_char == "%":
-                tokens.append(Token(TT_PLUS, self.__sec.section, self.__sec.ln_cnt, "%"))
+                tokens.append(Token(TT_PERCENT, self.__sec.section, self.__sec.ln_cnt, "%"))
                 self.__advance()
 
             elif self.__current_char == "+":
