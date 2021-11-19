@@ -1,6 +1,4 @@
 #yoink <test_f.milk>
-#yoink-src <git_pkg>
-
 int a = 10
 int b = 20
 str bb = "Hello "
@@ -13,9 +11,13 @@ mikf add(int a, int b) -> int {
 }
 
 int wtf = add(1, 20)
-mikas add_lol(int a, int b) -> int {
+mikas add_lol() -> int {
 	addq %rdi, %rsi
 	movq %rdi, %rax
 	ret
 }
 int wohooo = 1
+
+if (wohooo == 5) {
+	str sdufhgfhghdf = "yes"
+}

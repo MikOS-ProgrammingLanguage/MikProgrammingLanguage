@@ -69,10 +69,29 @@ class IDNode:
         return f"{self.tok}"
 
 class BoolNode:
-    pass
+    def __init__(self) -> None:
+        self.bool_statement = ""
+    
+    def __repr__(self) -> str:
+        return f"({self.bool_statement})"
+
+class CodeBlock:
+    def __init__(self) -> None:
+        self.code_bl_list = []
+
+    def add_arg(self, node):
+        self.code_bl_list.append(node)
+    
+    def __repr__(self) -> str:
+        return f"{self.code_bl_list}"
 
 class IfNode:
-    pass
+    def __init__(self, bool_block:BoolNode, code_block: CodeBlock) -> None:
+        self.bool_bl = bool_block
+        self.code_bl = code_block
+    
+    def __repr__(self) -> str:
+        return f"(if ({self.bool_bl})" + "{" + str(self.code_bl) + "})"
 
 class ElseNode:
     pass
@@ -112,16 +131,6 @@ class ArgBlockNode:
     
     def __repr__(self) -> str:
         return f"{self.bool_bl_list}"
-
-class CodeBlock:
-    def __init__(self) -> None:
-        self.code_bl_list = []
-
-    def add_arg(self, node):
-        self.code_bl_list.append(node)
-    
-    def __repr__(self) -> str:
-        return f"{self.code_bl_list}"
 
 class FunctionNode:
     def __init__(self, function_name, return_type, arg_block: ArgBlockNode, code_block: CodeBlock) -> None:
@@ -202,7 +211,7 @@ class Parser:
             res = self.__mk_id()
             node.add_arg(res)
         else:
-            None
+            return node
 
         return node
 
@@ -478,7 +487,46 @@ class Parser:
             return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
 
     def __if(self):
-        pass
+        self.__advance()
+        if self.__current_token.type_ == TT_LPAREN:
+            bool_block = BoolNode()
+            self.__advance()
+            while self.__current_token != None:
+                tok = self.__current_token
+                if tok.type_ in (TT_INT, TT_FLOAT):
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_STRING:
+                    bool_block.bool_statement += f"\"{tok.value}\""
+                elif tok.type_ == TT_CHAR:
+                    bool_block.bool_statement += f"'{tok.value}'"
+                elif tok.type_ == TT_ID and tok.value in self.VARS:
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_EQ:
+                    bool_block.bool_statement += "=="
+                elif tok.type_ == TT_LTHEN:
+                    bool_block.bool_statement += "<"
+                elif tok.type_ == TT_GTHEN:
+                    bool_block.bool_statement += ">"
+                elif tok.type_ == TT_LEQ:
+                    bool_block.bool_statement += "<="
+                elif tok.type_ == TT_GEQ:
+                    bool_block.bool_statement += ">="
+                elif tok.type_ == TT_RPAREN:
+                    self.__advance()
+                    break
+                else:
+                    NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
+                self.__advance()
+            
+            if self.__current_token.type_ == TT_LCURL:
+                code_block = CodeBlock()
+                self.__advance()
+                while self.__current_token.type_ != TT_RCURL:
+                    code_block = self.__check_and_make_type(code_block)
+                self.__advance()
+            else:
+                NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            return IfNode(bool_block, code_block)
     def __else(self):
         pass
     def __elif(self):
@@ -504,6 +552,12 @@ class Parser:
             pass
         elif tok.value == "mikas":
             node = self.__mikas()
+        elif tok.value == "if":
+            node = self.__if()
+        elif tok.value == "else":
+            node = self.__else()
+        elif tok.value == "elif":
+            node = self.__elif()
         else:
             node = self.__call_or_refference()
         return node

@@ -67,6 +67,9 @@ class Generator:
         elif type(node) == FunctionCall:
             code_ = str(self.__generate_f_call(node))
             return code_, self.is_n_main
+        elif type(node) == IfNode:
+            code_ = str(self.__generate_if(node))
+            return code_, self.is_n_main
         else:
             NewError("Ok you fucked with the compiler. STOP IT!")
 
@@ -182,6 +185,15 @@ class Generator:
         self.is_n_main = False
         return asm_func_str
 
+    def __generate_if(self, node):
+        if_str = "if ("
+        if_str += node.bool_bl.bool_statement
+        if_str += ") {\n"
+        for i in node.code_bl.code_bl_list:
+            if_str += str(self.__gen(i)[0])
+        if_str += "}\n"
+        return if_str
+
     def __bin_op_node(self, node):
         left_c  = self.__gen(node.left_node)[0]
         op      = node.op_tok.value
@@ -193,12 +205,12 @@ class Generator:
 
 def generate(input_pth, output_pth):
     start = time.time()
-    print(input_pth[1])
     with open(input_pth[1], "r") as f:
         content = f.read()
         f.close()
     preprocessed = preprocess(content, input_pth[1])
     lexed, sections = Lexer(preprocessed).lex()
+    #print(lexed)
     parsed = Parser(lexed).parse()
     g = Generator(parsed).generate()
     with open(output_pth[1]+".c", "w") as wf:

@@ -4,6 +4,12 @@ from compiler_util.error import NewError
 CHARS      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
 NUMBERS    = "0123456789"
 
+
+TT_LTHEN   = ""
+TT_GTHEN   = ""
+TT_LEQ     = ""
+TT_GEQ     = ""
+
 TT_PLUS    = "PLS"
 TT_MINUS   = "MIN"
 TT_MUL     = "MUL"
@@ -14,6 +20,7 @@ TT_ID      = "ID"
 TT_STRING  = "STR"
 TT_CHAR    = "CHAR"
 TT_ASSGN   = "ASSGN"
+TT_EQ      = "EQUALS"
 TT_LPAREN  = "LPAREN"
 TT_RPAREN  = "RPAREN"
 TT_LCURL   = "LCURL"
@@ -93,9 +100,29 @@ class Lexer:
             elif self.__current_char in CHARS:
                 tokens.append(self.__make_id())
             
-            elif self.__current_char == "=":
-                tokens.append(Token(TT_ASSGN, self.__sec.section, self.__sec.ln_cnt, "="))
+            elif self.__current_char == "<":
                 self.__advance()
+                if self.__current_char == "=":
+                    tokens.append(Token(TT_LEQ, self.__sec.section, self.__sec.ln_cnt, "<="))
+                    self.__advance()
+                else:
+                    tokens.append(Token(TT_LTHEN, self.__sec.section, self.__sec.ln_cnt, "<"))
+            
+            elif self.__current_char == ">":
+                self.__advance()
+                if self.__current_char == "=":
+                    tokens.append(Token(TT_GEQ, self.__sec.section, self.__sec.ln_cnt, ">="))
+                    self.__advance()
+                else:
+                    tokens.append(Token(TT_GTHEN, self.__sec.section, self.__sec.ln_cnt, ">"))
+
+            elif self.__current_char == "=":
+                self.__advance()
+                if self.__current_char == "=":
+                    tokens.append(Token(TT_EQ, self.__sec.section, self.__sec.ln_cnt, "=="))
+                    self.__advance()
+                else:
+                    tokens.append(Token(TT_ASSGN, self.__sec.section, self.__sec.ln_cnt, "="))
             
             elif self.__current_char == "\"":
                 tokens.append(self.__make_str())
