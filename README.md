@@ -2,4 +2,4 @@
 Später kommt mehr info
 I SWEAR
 
-## MIK is under the GNU License!
+## MIK is under the MIT License!
