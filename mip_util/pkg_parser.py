@@ -4,6 +4,7 @@ from os import listdir
 from os.path import isfile, join
 import os.path
 from config import *
+import compiler_util.preprocessor
 MODULE_NAME = ""
 EXTERNAL_PKGS = []
 IGNORE_FILES = []
@@ -31,9 +32,14 @@ def add_pkg(arg: str):
                 onlyfiles = [f for f in listdir(f_path) if isfile(join(f_path, f))]
                 with open(f_path+"/main.milk", "w") as main_f:
                     for i in onlyfiles:
-                        w_cntnt = f"#yoink <{i}>\n" if not i.endswith(".pkg") else ""
+                        w_cntnt = f"#yoink <{i}.milk>\n" if not i.endswith(".pkg") else ""
                         main_f.write(w_cntnt)
                 print("\nSuccess!")
+                with open(f_path+"/main.milk", "r") as r_main_f:
+                    code = r_main_f.read()
+                    r_main_f.close()
+                preprocessed = compiler_util.preprocessor.preprocess(code, f_path+"/main.milk")
+                print(preprocessed)
             else:
                 print("No milk.pkg found at: "+f_path)
                 print("Please make sure to add one!")

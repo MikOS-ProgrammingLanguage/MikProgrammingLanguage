@@ -23,7 +23,7 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True) -> str:
         for i in w_dir:
             new_w_str += i
 
-        w_dir = os.getcwd()+"\\"+new_w_str
+        w_dir = os.getcwd()+"/"+new_w_str
         start_file = splt_f[len(splt_f)-1]
         new_text += f"@section(\"{start_file}\")\n"
     for i in text.split("\n"):
@@ -34,7 +34,7 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True) -> str:
                 fname = mip_src_path+"/"+PKG_NAME+"/"+fname
             if fname in yoinked_files:
                 continue
-            with open(w_dir+"\\"+fname, "r")as file:
+            with open(w_dir+"/"+fname, "r")as file:
                 new_text += f"@section(\"{fname}\")\n"
                 content = file.read()
                 content = content.split("\n")

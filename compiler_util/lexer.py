@@ -91,8 +91,21 @@ class Lexer:
                 self.__advance()
             
             elif self.__current_char == "/":
-                tokens.append(Token(TT_DIV, self.__sec.section, self.__sec.ln_cnt, "/"))
                 self.__advance()
+                if self.__current_char == "/":
+                    while self.__current_char != "\n":
+                        self.__advance()
+                elif self.__current_char == "*":
+                    self.__advance()
+                    while True:
+                        if self.__current_char == "*":
+                            self.__advance()
+                            if self.__current_char == "/":
+                                self.__advance()
+                                break
+                        self.__advance()
+                else:
+                    tokens.append(Token(TT_DIV, self.__sec.section, self.__sec.ln_cnt, "/"))
             
             elif self.__current_char in NUMBERS:
                 tokens.append(self.__make_number())
