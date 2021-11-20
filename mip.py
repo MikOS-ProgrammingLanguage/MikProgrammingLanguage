@@ -3,6 +3,7 @@ from genericpath import isdir
 import sys
 import os
 import shutil
+from compiler_util.error import NewCritical, NewError, NewInfo, NewWarning
 from mip_util.pkg_parser import install_external, parse_pkg
 from os import listdir
 from os.path import isfile, join
@@ -32,19 +33,19 @@ def remove(args: list):
             for y in cntnts.split("\n"):
                 print(y)
                 if y.endswith(i):
-                    print("found pkg-src:::removing it")
+                    NewInfo("founf pkg-src ->removing it")
                 else:
                     new += y
-            print(f"Succesfully removed {i}")
+            NewInfo(f"Successfully removed {i}")
         except:
-            print("Package not found!\n")
+            NewError("Package not found")
     with open(src_path+"/mip-src/req_satisfied.txt", "w") as req_s_w:
         req_s_w.write(new)
         req_s_w.close()
 
 def install(args: list):
     if len(args) > 1:
-        print("To many Arguments!\n")
+        NewError("To many Arguments!", q=True)
     else:
         git_link = args[0]
         ret = install_external(git_link)
@@ -53,7 +54,7 @@ def install(args: list):
 
 def add_pkg(args: list):
     if len(args) > 1:
-        print("To many Arguments!\n")
+        NewError("To many arguments", q=True)
     else:
         f_path = args[0]
         if os.path.isdir(f_path):
@@ -73,13 +74,15 @@ def add_pkg(args: list):
                     for i in onlyfiles:
                         w_cntnt = f"#yoink <{i}>\n" if not i.endswith(".pkg") else ""
                         main_f.write(w_cntnt)
-                print("\nSuccess!")
+                NewInfo("\nSuccess")
             else:
-                print("No milk.pkg found at: "+f_path)
-                print("Please make sure to add one!")
-                quit()
+                NewError(f"No milk.pkg found at: {f_path}")
+                NewInfo("Please make sure to add one", q=True)
         else:
-            print("File not found: ", f_path)
+            NewCritical("File not found")
+
+def fix(args):
+    pass
 
 # Handle
 def handle_options(args: list):
@@ -87,8 +90,9 @@ def handle_options(args: list):
         print("Help:\n")
         print("    - install -> installs a package via a github link ::: mip install <github-link>")
         print("    - add-pkg -> adds a package to your mip-src directory ::: mip add-pkg <relative-pkg-path>")
-        print("    - remove -> removes specified packages by name ::: mip remove <pkg1> <pkg2> <...>")
-        print("    - list -> lists all installed packages")
+        print("    - remove  -> removes specified packages by name ::: mip remove <pkg1> <pkg2> <...>")
+        print("    - list    -> lists all installed packages")
+        print("    - fix     -> tries to fix bugged install congifurations")
         print("    Wanna make your code public? Post it on github and make sure to include a 'milk.pk' file in the root dir")
     else:
         if args[0] == "install":
@@ -99,6 +103,8 @@ def handle_options(args: list):
             remove(args[1:])
         elif args[0] == "list":
             list_pkgs()
+        elif args[0] == "fix":
+            fix(args[1:])
         else:
             print("Command not recognized")
 if __name__=="__main__":

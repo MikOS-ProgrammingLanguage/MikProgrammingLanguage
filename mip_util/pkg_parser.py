@@ -4,6 +4,7 @@ from os import listdir
 from os.path import isfile, join
 import os.path
 from config import *
+import compiler_util.error
 import compiler_util.preprocessor
 MODULE_NAME = ""
 EXTERNAL_PKGS = []
@@ -34,18 +35,25 @@ def add_pkg(arg: str):
                     for i in onlyfiles:
                         w_cntnt = f"#yoink <{i}.milk>\n" if not i.endswith(".pkg") else ""
                         main_f.write(w_cntnt)
-                print("\nSuccess!")
+                compiler_util.error.NewInfo("Success!")
                 with open(f_path+"/main.milk", "r") as r_main_f:
                     code = r_main_f.read()
                     r_main_f.close()
                 preprocessed = compiler_util.preprocessor.preprocess(code, f_path+"/main.milk")
                 print(preprocessed)
+                """
+                
+
+                TODO
+
+
+
+                """
             else:
-                print("No milk.pkg found at: "+f_path)
-                print("Please make sure to add one!")
-                quit()
+                compiler_util.error.NewError(f"No milk.pkg was found at: {f_path}")
+                compiler_util.error.NewInfo(f"Please make sure to add one!")
         else:
-            print("File not found: ", f_path)
+            compiler_util.error.NewCritical(f"File not found: {f_path}")
 
 def install_external(ext_name: str):    # clones a repo to a temporary folder and parses the pkg
 
@@ -64,7 +72,7 @@ def install_external(ext_name: str):    # clones a repo to a temporary folder an
         req_satisfied = req.read()
         req.close()
     if ext_name in req_satisfied:
-        print(f"\n-    requirement allready satisfied: {ext_name}")
+        compiler_util.error.NewWarning(f"\n-    requirement allready satisfied: {ext_name}", q=True)
     else:
         os.system(f"cd {temp_src} && cd .. && git clone {ext_name} temp")
         if os.path.isfile(f"{temp_src}/milk.pkg"):
@@ -81,13 +89,13 @@ def install_external(ext_name: str):    # clones a repo to a temporary folder an
             os.system(f"mkdir \"{temp_src}\"")
             with open(src_path+"/mip-src/req_satisfied.txt", "a") as ap:
                 ap.write(f"{ext_name}:::{pkg_name2}\n")
-            print(f"\nSucesfully downloaded package: {pkg_name2}! You can now use it via. '#yoink-src <{pkg_name2}>'\n")
+            compiler_util.error.NewInfo(f"\nSuccessdully downloaded package: {pkg_name2}! You can now use it via: '#yoink-src <{pkg_name2}>'\n")
             add_pkg(mip_src_path+"/"+pkg_name2)
         else:
-            print("No milk.pkg found at in Github repo! Please contact the developer\nABORTING")
+            compiler_util.error.NewError("No milk.pkg found at in Github repo! Please contact the developer")
+            compiler_util.error.NewCritical("ABORTING", no_q=True)
             os.system(f"rmdir /Q /S \"{temp_src}\"")
             os.system(f"mkdir \"{temp_src}\"")
-            print("Aborted Successfully")
 
 def parse_pkg(text: str):
     IGNORE_FILES = []

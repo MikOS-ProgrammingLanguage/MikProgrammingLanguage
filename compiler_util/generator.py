@@ -204,7 +204,7 @@ class Generator:
         return "Why the fuck would you want to represent the code generator!"
 
 def generate(input_pth, output_pth):
-    start = time.time()
+    start = time.perf_counter()
     with open(input_pth[1], "r") as f:
         content = f.read()
         f.close()
@@ -216,5 +216,5 @@ def generate(input_pth, output_pth):
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)
         wf.close()
-    end = time.time()
-    print(f"File: {output_pth[1]}.c succesfully created in {end-start} seconds")
+    end = time.perf_counter()
+    NewInfo(f"File: {output_pth[1]}.c successfully created in {end-start} seconds")
