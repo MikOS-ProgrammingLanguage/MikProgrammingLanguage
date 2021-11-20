@@ -5,7 +5,7 @@ import os
 import shutil
 from compiler_util.error import NewCritical, NewError, NewInfo, NewWarning
 from mip_util.pkg_parser import install_external, parse_pkg
-from os import listdir
+from os import listdir, mkdir
 from os.path import isfile, join
 import os.path
 import time
@@ -29,11 +29,11 @@ def remove(args: list):
     new = ""
     for i in args:
         try:
-            os.system(f"rmdir /Q /S \"{mip_src_path}/{i}\"")
+            shutil.rmtree(f"{mip_src_path}/{i}")
             for y in cntnts.split("\n"):
                 print(y)
                 if y.endswith(i):
-                    NewInfo("founf pkg-src ->removing it")
+                    NewInfo("found pkg-src ->removing it")
                 else:
                     new += y
             NewInfo(f"Successfully removed {i}")
@@ -67,9 +67,13 @@ def add_pkg(args: list):
                 current_wdir = f"{mip_src_path}/{pkg_name}"
                 shutil.copytree(f_path, current_wdir)
                 for i in ignore:
-                    os.system(f"cd {current_wdir} && del {i}")
+                    os.system(f"cd {current_wdir} && rm {i}")
                         
                 onlyfiles = [f for f in listdir(current_wdir) if isfile(join(current_wdir, f))]
+                print("\n\n\n")
+                print("wtf")
+                print(onlyfiles)
+                print("\n\n\n")
                 with open(current_wdir+"/main.milk", "w") as main_f:
                     for i in onlyfiles:
                         w_cntnt = f"#yoink <{i}>\n" if not i.endswith(".pkg") else ""
@@ -82,7 +86,10 @@ def add_pkg(args: list):
             NewCritical("File not found")
 
 def fix(args):
-    pass
+    os.chdir(src_path+"/mip-src")
+    shutil.rmtree("temp")
+    mkdir("temp")
+    NewInfo("Successfully reseted temp", q=True)
 
 # Handle
 def handle_options(args: list):
