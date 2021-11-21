@@ -9,6 +9,8 @@ TT_LTHEN   = "LTHEN"
 TT_GTHEN   = "GTHEN"
 TT_LEQ     = "LEQ"
 TT_GEQ     = "GEQ"
+TT_AND     = "AND"
+TT_OR      = "OR"
 
 TT_KAND = "KAND"
 
@@ -80,6 +82,22 @@ class Lexer:
                     self.__sec.ln_cnt += 1
                 self.__advance()
             
+            elif self.__current_char == "&":
+                self.__advance()
+                if self.__current_char == "&":
+                    tokens.append(Token(TT_AND, self.__sec.section, self.__sec.ln_cnt, "&&"))
+                    self.__advance()
+                else:
+                    tokens.append(Token(TT_KAND, self.__sec.section, self.__sec.ln_cnt, "&"))
+            
+            elif self.__current_char == "|":
+                self.__advance()
+                if self.__current_char == "|":
+                    tokens.append(Token(TT_OR, self.__sec.section, self.__sec.ln_cnt, "||"))
+                    self.__advance()
+                else:
+                    NewError("IllegalTokenError", f"A token was found but not expected: bare |. In: ", self.__sec)
+
             elif self.__current_char == "%":
                 tokens.append(Token(TT_PERCENT, self.__sec.section, self.__sec.ln_cnt, "%"))
                 self.__advance()

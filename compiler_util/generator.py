@@ -44,16 +44,28 @@ class Generator:
             code_ = self.__bin_op_node(node)
             return code_, self.is_n_main
         elif type(node) == IDNode:
-            code_ = node.tok
+            code_ = ""
+            if node.deref:
+                code_ += "&"
+            code_ += str(node.tok)
             return code_, self.is_n_main
         elif type(node) == NumberNode:
-            code_ = node.tok.value
+            code_ = ""
+            if node.deref:
+                code_ += "&"
+            code_ += str(node.tok.value)
             return code_, self.is_n_main
         elif type(node) == StrNode:
-            code_ = node.tok.value
+            code_ = ""
+            if node.deref:
+                code_ += "&"
+            code_ += str(node.tok.value)
             return code_, self.is_n_main
         elif type(node) == CharNode:
-            code_ = node.tok.value
+            code_ = ""
+            if node.deref:
+                code_ += "&"
+            code_ += str(node.tok.value)
             return code_, self.is_n_main
         elif type(node) == ReturnNode:
             code_ = "return "+node.tok.tok + ";\n"
@@ -212,6 +224,7 @@ def generate(input_pth, output_pth):
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
     parsed = Parser(lexed).parse()
+    print(parsed)
     g = Generator(parsed).generate()
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)

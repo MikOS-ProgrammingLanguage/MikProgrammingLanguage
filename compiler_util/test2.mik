@@ -1,6 +1,6 @@
 #yoink <test_f.milk>
 #yoink-src <git_pkg>
-int a = 10
+int * a = 10
 int b = 20
 str bb = "Hello "
 str cc = "World!"
@@ -16,6 +16,8 @@ mikf add(int a, int b) -> int {
 	return c
 }
 
+
+
 int wtf = add(1, 20)
 mikas add_lol() -> int {
 	addq %rdi, %rsi
@@ -27,3 +29,4 @@ int wohooo = 1
 if (wohooo == 5) {
 	str sdufhgfhghdf = "yes"
 }
+int this_should_be_deref = &a

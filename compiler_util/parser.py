@@ -37,6 +37,7 @@ class RootNode:
 class NumberNode:
     def __init__(self, tok) -> None:
         self.tok = tok
+        self.deref = False
 
     def __repr__(self) -> str:
         return f"{self.tok}"
@@ -44,6 +45,7 @@ class NumberNode:
 class StrNode:
     def __init__(self, tok) -> None:
         self.tok = tok
+        self.deref = False
 
     def __repr__(self) -> str:
         return f"{self.tok}"
@@ -51,6 +53,7 @@ class StrNode:
 class CharNode:
     def __init__(self, tok) -> None:
         self.tok = tok
+        self.deref = False
     
     def __repr__(self) -> str:
         return f"{self.tok}"
@@ -58,12 +61,14 @@ class CharNode:
 class TypeNode:
     def __init__(self, tok) -> None:
         self.tok = tok
+        self.deref = False
     def __repr__(self) -> str:
         return f"{self.tok}"
 
 class IDNode:
     def __init__(self, var_name, tok) -> None:
         self.tok = tok
+        self.deref = False
     
     def __repr__(self) -> str:
         return f"{self.tok}"
@@ -205,11 +210,21 @@ class Parser:
 
     def __check_and_make_type(self, node):
         if self.__current_token.type_ in (TT_INT, TT_FLOAT):
-            res = self.__expr()
-            node.add_arg(res)
+            res = self.__expr() # gets tree for mathematical expr
+            self.__programm_node.add_node(res)
         elif self.__current_token.type_ == TT_ID:
             res = self.__mk_id()
-            node.add_arg(res)
+            self.__programm_node.add_node(res)
+        elif self.__current_token.type_ == TT_KAND:
+            res = self.__mk_id()
+            try:
+                res.deref = True
+            except Exception as e:
+                NewError("DerefferenceError", "You tried to derrefference something that can't be derefferenced")
+            self.__programm_node.add_node(res)
+        elif self.__current_token.type_ == TT_DEBUG:
+            self.__programm_node.add_node(DebugNode(TT_DEBUG))
+            self.__advance()
         else:
             return node
 
@@ -223,6 +238,13 @@ class Parser:
             elif self.__current_token.type_ == TT_ID:
                 res = self.__mk_id()
                 self.__programm_node.add_node(res)
+            elif self.__current_token.type_ == TT_KAND:
+                res = self.__mk_id()
+                try:
+                    res.deref = True
+                except Exception as e:
+                    NewError("DerefferenceError", "You tried to derrefference something that can't be derefferenced")
+                self.__programm_node.add_node(res)
             elif self.__current_token.type_ == TT_DEBUG:
                 self.__programm_node.add_node(DebugNode(TT_DEBUG))
                 self.__advance()
@@ -233,12 +255,16 @@ class Parser:
 
     def __factor(self):
         tok = self.__current_token
-
         if tok.type_ in (TT_INT, TT_FLOAT):
             self.__advance()
             return NumberNode(tok)
         
-        elif tok.type_ in (TT_ID):
+        elif tok.type_ in (TT_ID, TT_KAND):
+            deref = False
+            if tok.type_ == TT_KAND:
+                deref = True
+                self.__advance()
+                tok = self.__current_token
             if tok.value in self.VARS:
                 tok2 = self.VARS.get(tok.value)
                 tok2 = tok.value
@@ -248,7 +274,9 @@ class Parser:
             else:
                 NewError("RefferencedBeforeAssignement", f"The variable '{tok.value}' is refferenced but not assigned!")
             self.__advance()
-            return IDNode(tok.value, tok2)
+            node = IDNode(tok.value, tok2)
+            node.deref = deref
+            return node
         elif tok.type_ in (TT_STRING): 
             self.__advance()
             return StrNode(tok)
@@ -271,6 +299,7 @@ class Parser:
         
         return left
     def __assign(self, type_):
+        deref = False
         self.__advance()
         if self.__current_token.type_ == TT_MUL:
             pointer = True
@@ -501,16 +530,22 @@ class Parser:
                     bool_block.bool_statement += f"'{tok.value}'"
                 elif tok.type_ == TT_ID and tok.value in self.VARS:
                     bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_KAND:
+                    bool_block.bool_statement += "&"
                 elif tok.type_ == TT_EQ:
-                    bool_block.bool_statement += "=="
+                    bool_block.bool_statement += " == "
                 elif tok.type_ == TT_LTHEN:
-                    bool_block.bool_statement += "<"
+                    bool_block.bool_statement += " < "
                 elif tok.type_ == TT_GTHEN:
-                    bool_block.bool_statement += ">"
+                    bool_block.bool_statement += " > "
                 elif tok.type_ == TT_LEQ:
-                    bool_block.bool_statement += "<="
+                    bool_block.bool_statement += " <= "
                 elif tok.type_ == TT_GEQ:
-                    bool_block.bool_statement += ">="
+                    bool_block.bool_statement += " >= "
+                elif tok.type_ == TT_AND:
+                    bool_block.bool_statement += " && "
+                elif tok.type_ == TT_OR:
+                    bool_block.bool_statement += " || "
                 elif tok.type_ == TT_RPAREN:
                     self.__advance()
                     break
