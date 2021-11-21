@@ -6,8 +6,7 @@ class NewError:
         self.err_t = err_type
         self.desc = description
         self.loc = location
-        print(Fore.LIGHTRED_EX+f"[ERROR]: {self.err_t}! {self.desc} {self.loc}")
-        Fore.RESET
+        print(Fore.LIGHTRED_EX+f"[ERROR]: {self.err_t}! {self.desc} {self.loc}"+Fore.RESET)
         if not no_q:
             exit(-1)
 
@@ -16,8 +15,7 @@ class NewWarning:
         self.warn_type = warn_type
         self.descript = description
         self.loc = location
-        print(Fore.MAGENTA+f"[WARNING]: {self.warn_type}! {self.descript} {self.loc}")
-        Fore.RESET
+        print(Fore.MAGENTA+f"[WARNING]: {self.warn_type}! {self.descript} {self.loc}"+Fore.RESET)
         if q:
             exit(-1)
 
@@ -26,14 +24,12 @@ class NewCritical:
         self.crit_type = crit_type
         self.desc = description
         self.loc = location
-        Fore.RESET
-        print(Fore.RED+f"[CRITICAL]: {self.crit_type}! {self.desc} {self.loc}")
+        print(Fore.RED+f"[CRITICAL]: {self.crit_type}! {self.desc} {self.loc}"+Fore.RESET)
         if not no_q:
             exit(-1)
 
 class NewInfo:
     def __init__(self, info: str, q=False) -> None:
-        print(Fore.GREEN+f"[INFO]: {info}")
-        Fore.RESET
+        print(Fore.GREEN+f"[INFO]: {info}"+Fore.RESET)
         if q:
             exit(-1)
