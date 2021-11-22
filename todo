@@ -1,6 +1,9 @@
 === TODO ===
-- add derefferencers (&)
 - sec-ignore(section names, and more section names to ignore)
+- lists for fuck sake
+- for
+- re-asign vars with '?='
+- structs
 
 === DONE ===
 - Throw error for double variable decleration
@@ -12,3 +15,6 @@
 - function calls
 - mikas
 - add pointers
+- add derefferencers (&)
+- more boolean logic (!=, ==, &&, ||, !, <, >, <=, >=)
+- while

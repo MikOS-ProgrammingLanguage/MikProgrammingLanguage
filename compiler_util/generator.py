@@ -82,8 +82,17 @@ class Generator:
         elif type(node) == IfNode:
             code_ = str(self.__generate_if(node))
             return code_, self.is_n_main
+        elif type(node) == ElseNode:
+            code_ = str(self.__generate_else(node))
+            return code_, self.is_n_main
+        elif type(node) == ElifNode:
+            code_ = str(self.__generate_elif(node))
+            return code_, self.is_n_main
+        elif type(node) == WhileNode:
+            code_ = str(self.__generate_while(node))
+            return code_, self.is_n_main
         else:
-            NewError("Ok you fucked with the compiler. STOP IT!")
+            NewCritical("Ok you fucked with the compiler. STOP IT!")
 
     def __generate_int_asgn(self, node):
         code_ = "int"
@@ -204,7 +213,32 @@ class Generator:
         for i in node.code_bl.code_bl_list:
             if_str += str(self.__gen(i)[0])
         if_str += "}\n"
-        return if_str
+        return if_str  
+    def __generate_elif(self, node):
+        elif_str = "else if ("
+        elif_str += node.bool_bl.bool_statement
+        elif_str += ") {\n"
+        for i in node.code_bl.code_bl_list:
+            elif_str += str(self.__gen(i)[0])
+        elif_str += "}\n"
+        return elif_str
+    def __generate_else(self, node):
+        else_str = "else {\n"
+        for i in node.code_bl.code_bl_list:
+            else_str += str(self.__gen(i)[0])
+        else_str += "}\n"
+        return else_str
+
+    def __generate_while(self, node):
+        while_str = "while ("
+        while_str += node.bool_bl.bool_statement
+        while_str += ") {\n"
+        for i in node.code_bl.code_bl_list:
+            while_str += str(self.__gen(i)[0])
+        while_str += "}\n"
+        return while_str
+    def __generate_for(self, node):
+        pass
 
     def __bin_op_node(self, node):
         left_c  = self.__gen(node.left_node)[0]
@@ -224,7 +258,7 @@ def generate(input_pth, output_pth):
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
     parsed = Parser(lexed).parse()
-    print(parsed)
+    #print(parsed)
     g = Generator(parsed).generate()
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)

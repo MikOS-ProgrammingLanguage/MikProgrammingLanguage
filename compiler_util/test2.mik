@@ -28,5 +28,14 @@ int wohooo = 1
 
 if (wohooo == 5) {
 	str sdufhgfhghdf = "yes"
+} elif (wohooo == 10) {
+	str sdufhgfhghd = "no"
+} else {
+	str sdufhgfhgh = "yesn't"
 }
+
+while (wohooo != 10) {
+	str sdufhgfhg = "non't"
+}
+
 int this_should_be_deref = &a

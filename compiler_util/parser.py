@@ -99,10 +99,18 @@ class IfNode:
         return f"(if ({self.bool_bl})" + "{" + str(self.code_bl) + "})"
 
 class ElseNode:
-    pass
+    def __init__(self, code_block: CodeBlock) -> None:
+        self.code_bl = code_block
+    def __repr__(self) -> str:
+        return f"(else "+"{"+f"{self.code_bl}"+"})"
 
 class ElifNode:
-    pass
+    def __init__(self, bool_block: BoolNode, code_block: CodeBlock) -> None:
+        self.bool_bl = bool_block
+        self.code_bl = code_block
+    
+    def __repr__(self) -> str:
+        return f"(if ({self.bool_bl})"+ "{" + str(self.code_bl) + "})"
 
 class BinOpNode:
     def __init__(self, left_node, op_tok, right_node) -> None:
@@ -185,6 +193,12 @@ class ReturnNode:
     def __repr__(self) -> str:
         return f"RETURN: {self.tok}"
 
+class WhileNode:
+    def __init__(self, bool_block:BoolNode, code_block:CodeBlock) -> None:
+        self.bool_bl = bool_block
+        self.code_bl = code_block
+    def __repr__(self) -> str:
+        return f"(if ({self.bool_bl}) "+"{"+self.code_bl+"}"
 # NODES END
 
 
@@ -208,22 +222,22 @@ class Parser:
         pos_now = self.__pos
         return self.__tokens[pos_now+num] if pos_now+num < len(self.__tokens) else None
 
-    def __check_and_make_type(self, node):
+    def __check_and_make_type(self, node:CodeBlock):
         if self.__current_token.type_ in (TT_INT, TT_FLOAT):
             res = self.__expr() # gets tree for mathematical expr
-            self.__programm_node.add_node(res)
+            node.add_arg(res)
         elif self.__current_token.type_ == TT_ID:
             res = self.__mk_id()
-            self.__programm_node.add_node(res)
+            node.add_arg(res)
         elif self.__current_token.type_ == TT_KAND:
             res = self.__mk_id()
             try:
                 res.deref = True
             except Exception as e:
                 NewError("DerefferenceError", "You tried to derrefference something that can't be derefferenced")
-            self.__programm_node.add_node(res)
+            node.add_arg(res)
         elif self.__current_token.type_ == TT_DEBUG:
-            self.__programm_node.add_node(DebugNode(TT_DEBUG))
+            node.add_arg(DebugNode(TT_DEBUG))
             self.__advance()
         else:
             return node
@@ -532,8 +546,12 @@ class Parser:
                     bool_block.bool_statement += f"{tok.value}"
                 elif tok.type_ == TT_KAND:
                     bool_block.bool_statement += "&"
+                elif tok.type_ == TT_NOT:
+                    bool_block.bool_statement += " !"
                 elif tok.type_ == TT_EQ:
                     bool_block.bool_statement += " == "
+                elif tok.type_ == TT_NEQ:
+                    bool_block.bool_statement += " != "
                 elif tok.type_ == TT_LTHEN:
                     bool_block.bool_statement += " < "
                 elif tok.type_ == TT_GTHEN:
@@ -563,9 +581,119 @@ class Parser:
                 NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
             return IfNode(bool_block, code_block)
     def __else(self):
-        pass
+        self.__advance()
+        if self.__current_token.type_ == TT_LCURL:
+            code_block = CodeBlock()
+            self.__advance()
+            while self.__current_token.type_ != TT_RCURL:
+                code_block = self.__check_and_make_type(code_block)
+            self.__advance()
+        else:
+            NewError("NoCodeBlockError", "No code block '{}' was started but one was expected")
+        return ElseNode(code_block)
     def __elif(self):
-        pass
+        self.__advance()
+        if self.__current_token.type_ == TT_LPAREN:
+            bool_block = BoolNode()
+            self.__advance()
+            while self.__current_token != None:
+                tok = self.__current_token
+                if tok.type_ in (TT_INT, TT_FLOAT):
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_STRING:
+                    bool_block.bool_statement += f"\"{tok.value}\""
+                elif tok.type_ == TT_CHAR:
+                    bool_block.bool_statement += f"'{tok.value}'"
+                elif tok.type_ == TT_ID and tok.value in self.VARS:
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_KAND:
+                    bool_block.bool_statement += "&"
+                elif tok.type_ == TT_NOT:
+                    bool_block.bool_statement += " !"
+                elif tok.type_ == TT_EQ:
+                    bool_block.bool_statement += " == "
+                elif tok.type_ == TT_NEQ:
+                    bool_block.bool_statement += " != "
+                elif tok.type_ == TT_LTHEN:
+                    bool_block.bool_statement += " < "
+                elif tok.type_ == TT_GTHEN:
+                    bool_block.bool_statement += " > "
+                elif tok.type_ == TT_LEQ:
+                    bool_block.bool_statement += " <= "
+                elif tok.type_ == TT_GEQ:
+                    bool_block.bool_statement += " >= "
+                elif tok.type_ == TT_AND:
+                    bool_block.bool_statement += " && "
+                elif tok.type_ == TT_OR:
+                    bool_block.bool_statement += " || "
+                elif tok.type_ == TT_RPAREN:
+                    self.__advance()
+                    break
+                else:
+                    NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
+                self.__advance()
+            
+            if self.__current_token.type_ == TT_LCURL:
+                code_block = CodeBlock()
+                self.__advance()
+                while self.__current_token.type_ != TT_RCURL:
+                    code_block = self.__check_and_make_type(code_block)
+                self.__advance()
+            else:
+                NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            return ElifNode(bool_block, code_block)
+
+    def __while(self):
+        self.__advance()
+        if self.__current_token.type_ == TT_LPAREN:
+            bool_block = BoolNode()
+            self.__advance()
+            while self.__current_token != None:
+                tok = self.__current_token
+                if tok.type_ in (TT_INT, TT_FLOAT):
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_STRING:
+                    bool_block.bool_statement += f"\"{tok.value}\""
+                elif tok.type_ == TT_CHAR:
+                    bool_block.bool_statement += f"'{tok.value}'"
+                elif tok.type_ == TT_ID and tok.value in self.VARS:
+                    bool_block.bool_statement += f"{tok.value}"
+                elif tok.type_ == TT_KAND:
+                    bool_block.bool_statement += "&"
+                elif tok.type_ == TT_NOT:
+                    bool_block.bool_statement += " !"
+                elif tok.type_ == TT_EQ:
+                    bool_block.bool_statement += " == "
+                elif tok.type_ == TT_NEQ:
+                    bool_block.bool_statement += " != "
+                elif tok.type_ == TT_LTHEN:
+                    bool_block.bool_statement += " < "
+                elif tok.type_ == TT_GTHEN:
+                    bool_block.bool_statement += " > "
+                elif tok.type_ == TT_LEQ:
+                    bool_block.bool_statement += " <= "
+                elif tok.type_ == TT_GEQ:
+                    bool_block.bool_statement += " >= "
+                elif tok.type_ == TT_AND:
+                    bool_block.bool_statement += " && "
+                elif tok.type_ == TT_OR:
+                    bool_block.bool_statement += " || "
+                elif tok.type_ == TT_RPAREN:
+                    self.__advance()
+                    break
+                else:
+                    NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
+                self.__advance()
+            
+            if self.__current_token.type_ == TT_LCURL:
+                code_block = CodeBlock()
+                self.__advance()
+                while self.__current_token.type_ != TT_RCURL:
+                    code_block = self.__check_and_make_type(code_block)
+                self.__advance()
+            else:
+                NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            return WhileNode(bool_block, code_block)
 
     def __mk_id(self):
         tok = self.__current_token
@@ -593,6 +721,8 @@ class Parser:
             node = self.__else()
         elif tok.value == "elif":
             node = self.__elif()
+        elif tok.value == "while":
+            node = self.__while()
         else:
             node = self.__call_or_refference()
         return node

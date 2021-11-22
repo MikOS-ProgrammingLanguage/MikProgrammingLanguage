@@ -11,6 +11,8 @@ TT_LEQ     = "LEQ"
 TT_GEQ     = "GEQ"
 TT_AND     = "AND"
 TT_OR      = "OR"
+TT_NEQ     = "NEQ"
+TT_NOT     = "NOT"
 
 TT_KAND = "KAND"
 
@@ -82,6 +84,14 @@ class Lexer:
                     self.__sec.ln_cnt += 1
                 self.__advance()
             
+            elif self.__current_char == "!":
+                self.__advance()
+                if self.__current_char == "=":
+                    tokens.append(Token(TT_NEQ, self.__sec.section, self.__sec.ln_cnt, "!="))
+                    self.__advance()
+                else:
+                    tokens.append(Token(TT_NOT, self.__sec.section, self.__sec.ln_cnt, "!"))
+
             elif self.__current_char == "&":
                 self.__advance()
                 if self.__current_char == "&":
