@@ -44,5 +44,9 @@ for (int i = 20; i < 100)
 {
 	i ?= i+1
 }
+// Add three chars together
+char char_ = 'l'
+char_ ?= char_ + 'o'
+char_ ?= char_ + 'l'
 
 int this_should_be_deref = &a

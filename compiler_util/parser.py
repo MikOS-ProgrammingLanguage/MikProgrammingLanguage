@@ -136,6 +136,17 @@ class AsignmentNode:
     def __repr__(self) -> str:
         return f"({self.type_} {self.name} {self.op} {self.value})"
 
+class ReAsignementNode:
+    def __init__(self, type_, pointer, name, op=None, value=None) -> None:
+        self.type_ = type_
+        self.pointer = pointer
+        self.name = name
+        self.value = value
+        self.op = op
+    
+    def __repr__(self) -> str:
+        return f"(re {self.type_} {self.name} {self.op} {self.value}"
+
 class ArgBlockNode:
     def __init__(self) -> None:
         self.bool_bl_list = []
@@ -386,9 +397,8 @@ class Parser:
             node = self.__factor()
         elif call_name in self.VARS and call_name != "return":
             #print(self.__current_token)
-            node = self.__assign(type_=self.VARS.get(call_name).type_.lower(), name_=call_name)
-            print(self.__current_token)
-            print(node)
+            temp_node = self.__assign(type_=self.VARS.get(call_name).type_.lower(), name_=call_name)
+            node = ReAsignementNode(temp_node.type_, temp_node.pointer, temp_node.name, temp_node.op, temp_node.value)
         else:
             self.__advance()
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:

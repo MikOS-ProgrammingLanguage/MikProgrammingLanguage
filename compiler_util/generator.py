@@ -12,7 +12,7 @@ class Generator:
 
     def generate(self):
         c_code = "int main(void) {"
-        is_n_main_code = ""
+        is_n_main_code = "char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}\n//BUILTIN_END\n\n\n"
         # iterate through all nodes and generate code for them
         for i in self.root_node.nodes:
             code = self.__gen(i)
@@ -32,15 +32,27 @@ class Generator:
             elif node.type_ == "str":
                 code_ = self.__generate_str_asgn(node)
             elif node.type_ == "flt":
-                code_ = self.__generate_flt(node)
+                code_ = self.__generate_flt_asgn(node)
             elif node.type_ == "char":
-                code_ = self.__generate_char(node)
+                code_ = self.__generate_char_asgn(node)
+            else:
+                NewError("well wtf")
+            return code_, self.is_n_main
+        elif type(node) == ReAsignementNode:
+            if node.type_ == "int":
+                code_ = self.__generate_int_reasgn(node)
+            elif node.type_ == "str":
+                code_ = self.__generate_str_reasgn(node)
+            elif node.type_ == "flt":
+                code_ = self.__generate_flt_reasgn(node)
+            elif node.type_ == "char":
+                code_ = self.__generate_char_reasgn(node)
             else:
                 NewError("well wtf")
             return code_, self.is_n_main
         elif type(node) == BinOpNode:
             if ign_bin_op:
-                NewError("OperationError", "You can't perform mathematical operations with type str or char!")
+                NewError("OperationError", "You can't perform mathematical operations with type str!")
             code_ = self.__bin_op_node(node)
             return code_, self.is_n_main
         elif type(node) == IDNode:
@@ -65,7 +77,9 @@ class Generator:
             code_ = ""
             if node.deref:
                 code_ += "&"
+            code_ += "'"
             code_ += str(node.tok.value)
+            code_ += "'"
             return code_, self.is_n_main
         elif type(node) == ReturnNode:
             code_ = "return "+node.tok.tok + ";\n"
@@ -112,7 +126,7 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-    def __generate_flt(self, node):
+    def __generate_flt_asgn(self, node):
         code_ = "float"
         code_ += "* " if node.pointer else " "
         code_ += node.name
@@ -141,13 +155,29 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-    def __generate_char(self, node):
+    def __generate_char_asgn(self, node):
+        #print("lol")
         code_ = "char"
         code_ += "* " if node.pointer else " "
         code_ += node.name
         if node.value != None:
             code_ += f" {node.op} "
-            code_ += str(self.__gen(node.value, True)[0])
+            code_ += ""
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += "'"
+            else:
+                code_ += "';\n"
+            return code_
+
+    def __generate_int_reasgn(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
             code_ += ";\n"
             return code_
         else:
@@ -156,7 +186,49 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
-
+    def __generate_flt_reasgn(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_str_reasgn(self, node):
+        code_ = "strcpy("
+        code_ += node.name
+        code_ += ","
+        code_ += "\""
+        if node.value != None:
+            code_ += str(self.__gen(node.value, True)[0])
+            code_ += "\");\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ""
+            code_ += "\");\n"
+            return code_
+    def __generate_char_reasgn(self, node):
+        #print("lol2")
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += "'"
+            else:
+                code_ += "';\n"
+            return code_
 
     def __generate_f_call(self, node):
         f_call_str = f"{node.func_name}("
@@ -169,7 +241,7 @@ class Generator:
             f_call_str += i
         f_call_str += ")"
         return f_call_str
-        
+
 
     def __generate_func(self, node):
         self.is_n_main = True
@@ -268,7 +340,7 @@ def generate(input_pth, output_pth):
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
     parsed = Parser(lexed).parse()
-    print(parsed)
+    #print(parsed)
     g = Generator(parsed).generate()
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)
