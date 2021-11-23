@@ -14,7 +14,7 @@ TT_OR      = "OR"
 TT_NEQ     = "NEQ"
 TT_NOT     = "NOT"
 
-TT_KAND = "KAND"
+TT_KAND    = "KAND"
 
 TT_PLUS    = "PLS"
 TT_MINUS   = "MIN"
@@ -26,6 +26,7 @@ TT_ID      = "ID"
 TT_STRING  = "STR"
 TT_CHAR    = "CHAR"
 TT_ASSGN   = "ASSGN"
+TT_REASGN  = "REASGN"
 TT_EQ      = "EQUALS"
 TT_LPAREN  = "LPAREN"
 TT_RPAREN  = "RPAREN"
@@ -33,6 +34,7 @@ TT_LCURL   = "LCURL"
 TT_RCURL   = "RCURL"
 TT_COMMA   = "COMMA"
 TT_ARROW   = "ARROW"
+TT_SEMIC   = "SEMICOLON"
 TT_PERCENT = "PERCENT"
 TT_DEBUG   = "DEBUG"
 TT_EOF     = "EOF"
@@ -84,6 +86,16 @@ class Lexer:
                     self.__sec.ln_cnt += 1
                 self.__advance()
             
+            elif self.__current_char == ";":
+                tokens.append(Token(TT_SEMIC, self.__sec.section, self.__sec.ln_cnt, ";"))
+                self.__advance()
+
+            elif self.__current_char == "?":
+                self.__advance()
+                if self.__current_char == "=":
+                    tokens.append(Token(TT_REASGN, self.__sec.section, self.__sec.ln_cnt, "?="))
+                    self.__advance()
+
             elif self.__current_char == "!":
                 self.__advance()
                 if self.__current_char == "=":

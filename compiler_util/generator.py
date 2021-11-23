@@ -91,6 +91,9 @@ class Generator:
         elif type(node) == WhileNode:
             code_ = str(self.__generate_while(node))
             return code_, self.is_n_main
+        elif type(node) == ForNode:
+            code_ = str(self.__generate_for(node))
+            return code_, self.is_n_main
         else:
             NewCritical("Ok you fucked with the compiler. STOP IT!")
 
@@ -238,7 +241,14 @@ class Generator:
         while_str += "}\n"
         return while_str
     def __generate_for(self, node):
-        pass
+        for_str = "for ("
+        for_str += str(self.__gen(node.cnt_init)[0])
+        for_str += node.bool_bl.bool_statement
+        for_str += ";) {\n"
+        for i in node.code_bl.code_bl_list:
+            for_str += str(self.__gen(i)[0])
+        for_str += "}\n"
+        return for_str
 
     def __bin_op_node(self, node):
         left_c  = self.__gen(node.left_node)[0]
@@ -258,7 +268,7 @@ def generate(input_pth, output_pth):
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
     parsed = Parser(lexed).parse()
-    #print(parsed)
+    print(parsed)
     g = Generator(parsed).generate()
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)

@@ -26,16 +26,23 @@ mikas add_lol() -> int {
 }
 int wohooo = 1
 
+str sdufhgfhghdf
+
 if (wohooo == 5) {
-	str sdufhgfhghdf = "yes"
+	sdufhgfhghdf ?= "yes"
 } elif (wohooo == 10) {
-	str sdufhgfhghd = "no"
+	sdufhgfhghdf ?= "no"
 } else {
-	str sdufhgfhgh = "yesn't"
+	sdufhgfhghdf ?= "yesn't"
 }
 
 while (wohooo != 10) {
-	str sdufhgfhg = "non't"
+	sdufhgfhghdf ?= "non't"
+}
+
+for (int i = 20; i < 100)
+{
+	i ?= i+1
 }
 
 int this_should_be_deref = &a

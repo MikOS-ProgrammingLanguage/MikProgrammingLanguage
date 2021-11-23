@@ -1,8 +1,8 @@
 === TODO ===
 - sec-ignore(section names, and more section names to ignore)
+
 - lists for fuck sake
-- for
-- re-asign vars with '?='
+- negative numbers ahhhhhhhhhhhhh
 - structs
 
 === DONE ===
@@ -18,3 +18,5 @@
 - add derefferencers (&)
 - more boolean logic (!=, ==, &&, ||, !, <, >, <=, >=)
 - while
+- re-asign vars with '?='
+- for (for (int i = 10; i < 50) {code})

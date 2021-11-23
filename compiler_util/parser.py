@@ -198,7 +198,15 @@ class WhileNode:
         self.bool_bl = bool_block
         self.code_bl = code_block
     def __repr__(self) -> str:
-        return f"(if ({self.bool_bl}) "+"{"+self.code_bl+"}"
+        return f"(if ({self.bool_bl}) "+"{"+str(self.code_bl)+"}"
+
+class ForNode:
+    def __init__(self, cnt_init, bool_block:BoolNode, code_block:CodeBlock) -> None:
+        self.cnt_init = cnt_init
+        self.bool_bl = bool_block
+        self.code_bl = code_block
+    def __repr__(self) -> str:
+        return f"(for ({self.cnt_init}; {self.bool_bl}) " + "{" + str(self.code_bl) + "})"
 # NODES END
 
 
@@ -312,7 +320,7 @@ class Parser:
             left = BinOpNode(left, op_tok, right)   # left factor is now bin op
         
         return left
-    def __assign(self, type_):
+    def __assign(self, type_, name_=""):
         deref = False
         self.__advance()
         if self.__current_token.type_ == TT_MUL:
@@ -322,54 +330,65 @@ class Parser:
             pointer = False
         if self.__current_token.type_ == TT_ID:
             name = self.__current_token.value
-            if name in self.VARS:
-                NewError("VariableNameDuplicate", f"The variable: {name} is already defined!")
+            if name in self.VARS and self.__get_token(1).type_ != TT_REASGN:
+                NewError("VariableNameDuplicate", f"The variable: {name} is already defined!", self.__current_token.ln_count)
             self.__advance()
             # should be = now
-            if self.__current_token.type_ == TT_ASSGN:
-                asgn_op = "="
+        elif name_ != "":
+            name = name_
+        if self.__current_token.type_ in (TT_ASSGN, TT_REASGN):
+            asgn_op = "="
+            self.__advance()
+            if self.__current_token.type_ == TT_ID and self.__current_token.value in self.FUNCTIONS:
+                f_name = self.__current_token.value
+                value = self.FUNCTIONS.get(self.__current_token.value)
+                len_args = len(value.arg_block.bool_bl_list)
+                new_block = []
                 self.__advance()
-                if self.__current_token.type_ == TT_ID and self.__current_token.value in self.FUNCTIONS:
-                    f_name = self.__current_token.value
-                    value = self.FUNCTIONS.get(self.__current_token.value)
-                    len_args = len(value.arg_block.bool_bl_list)
-                    new_block = []
+                if self.__current_token.type_ == TT_LPAREN:
                     self.__advance()
-                    if self.__current_token.type_ == TT_LPAREN:
-                        self.__advance()
-                        while self.__current_token.type_ != TT_RPAREN and self.__current_token.type_ != TT_EOF:
-                            if self.__current_token.value == "int":
-                                node = self.__assign(self.__current_token.value)
-                            elif self.__current_token.value == "flt":
-                                node = self.__assign(self.__current_token.value)
-                            elif self.__current_token.value == "str":
-                                node = self.__assign(self.__current_token.value)
-                            elif self.__current_token.value == "char":
-                                node = self.__assign(self.__current_token.value)
-                            elif self.__current_token.type_ == TT_COMMA:
-                                self.__advance()
-                                continue
-                            else:
-                                node = self.__mk_id()
-                            new_block.append(node)
-                        self.__advance()
-                        if len_args != len(new_block):
-                            NewError("ParameterExpectedError", f"{len_args} args were expected but {len(new_block)} args were found!", f"-> Section {new_block[0].tok.section} at Line {new_block[0].tok.ln_count}")
+                    while self.__current_token.type_ != TT_RPAREN and self.__current_token.type_ != TT_EOF:
+                        if self.__current_token.value == "int":
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value == "flt":
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value == "str":
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value == "char":
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.type_ == TT_COMMA:
+                            self.__advance()
+                            continue
                         else:
-                            return AsignmentNode(type_, pointer, name, asgn_op, FunctionCall(f_name, new_block))
-                else:
-                    value = self.__expr()
-                    self.VARS.update({name:AsignmentNode(type_, pointer, name, asgn_op, value)})
-                    return AsignmentNode(type_, pointer, name, asgn_op, value)
+                            node = self.__mk_id()
+                        new_block.append(node)
+                    self.__advance()
+                    if len_args != len(new_block):
+                        NewError("ParameterExpectedError", f"{len_args} args were expected but {len(new_block)} args were found!", f"-> Section {new_block[0].tok.section} at Line {new_block[0].tok.ln_count}")
+                    else:
+                        return AsignmentNode(type_, pointer, name, asgn_op, FunctionCall(f_name, new_block))
             else:
-                self.VARS.update({name:AsignmentNode(type_, pointer, name)})
-                return AsignmentNode(type_, pointer, name)
+                value = self.__expr()
+                self.VARS.update({name:AsignmentNode(type_, pointer, name, asgn_op, value)})
+                return AsignmentNode(type_, pointer, name, asgn_op, value)
+        else:
+            self.VARS.update({name:AsignmentNode(type_, pointer, name)})
+            return AsignmentNode(type_, pointer, name)
+
     def __call_or_refference(self):
         call = self.__current_token
         call_name = self.__current_token.value
 
+        #print(call)
+        #print(self.__get_token(1))
+
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
+        elif call_name in self.VARS and call_name != "return":
+            #print(self.__current_token)
+            node = self.__assign(type_=self.VARS.get(call_name).type_.lower(), name_=call_name)
+            print(self.__current_token)
+            print(node)
         else:
             self.__advance()
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:
@@ -397,16 +416,9 @@ class Parser:
                 else:
                     node = FunctionCall(call_name, new_block)
                 self.__advance()
-            elif self.__current_token.type_ == TT_ASSGN:
-                self.__advance()
-                if self.__current_token.type_.lower() == (self.VARS.get(call_name)).type_:
-                    node = AsignmentNode(type_=(self.VARS.get(call_name)).type_, name=call_name, op="=", value=self.__current_token)
-                else:
-                    NewError("TypeMissmatchException", f"The variable you are trying to assign has type: {(self.VARS.get(call_name)).type_} but you tried to assign: {self.__current_token.type_.lower()}")
-                self.__advance()
             elif call.value == "return":
                 node = ReturnNode(self.__factor())
-            elif self.__current_token.type_ not in (TT_LPAREN, TT_ASSGN, TT_EOF, TT_LCURL, TT_RCURL, TT_INT, TT_COMMA, TT_FLOAT, TT_STRING, TT_CHAR):
+            elif self.__current_token.type_ not in (TT_LPAREN, TT_ASSGN, TT_REASGN, TT_EOF, TT_LCURL, TT_RCURL, TT_INT, TT_COMMA, TT_FLOAT, TT_STRING, TT_CHAR):
                 if self.__current_token.value in self.VARS:
                     #inf = self.VARS.get(self.__current_token.value)
                     #inf = inf.value
@@ -579,6 +591,7 @@ class Parser:
                 self.__advance()
             else:
                 NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            print(self.__current_token)
             return IfNode(bool_block, code_block)
     def __else(self):
         self.__advance()
@@ -694,6 +707,70 @@ class Parser:
             else:
                 NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
             return WhileNode(bool_block, code_block)
+    def __for(self):
+        self.__advance()
+        if self.__current_token.type_ == TT_LPAREN:
+            self.__advance()
+            if self.__current_token.value == "int":
+                cnt_init = self.__assign(self.__current_token.value)
+            elif self.__current_token.value == "flt":
+                cnt_init = self.__assign(self.__current_token.value)
+            elif self.__current_token.value == "str":
+                cnt_init = self.__assign(self.__current_token.value)
+            elif self.__current_token.value == "char":
+                cnt_init = self.__assign(self.__current_token.value)
+            else:
+                cnt_init = self.__call_or_refference()
+            if self.__current_token.type_ == TT_SEMIC:
+                self.__advance()
+                bool_block = BoolNode()
+                while self.__current_token.type_ != TT_EOF:
+                    tok = self.__current_token
+                    if tok.type_ in (TT_INT, TT_FLOAT):
+                        bool_block.bool_statement += f"{tok.value}"
+                    elif tok.type_ == TT_STRING:
+                        bool_block.bool_statement += f"\"{tok.value}\""
+                    elif tok.type_ == TT_CHAR:
+                        bool_block.bool_statement += f"'{tok.value}'"
+                    elif tok.type_ == TT_ID and tok.value in self.VARS:
+                        bool_block.bool_statement += f"{tok.value}"
+                    elif tok.type_ == TT_KAND:
+                        bool_block.bool_statement += "&"
+                    elif tok.type_ == TT_NOT:
+                        bool_block.bool_statement += " !"
+                    elif tok.type_ == TT_EQ:
+                        bool_block.bool_statement += " == "
+                    elif tok.type_ == TT_NEQ:
+                        bool_block.bool_statement += " != "
+                    elif tok.type_ == TT_LTHEN:
+                        bool_block.bool_statement += " < "
+                    elif tok.type_ == TT_GTHEN:
+                        bool_block.bool_statement += " > "
+                    elif tok.type_ == TT_LEQ:
+                        bool_block.bool_statement += " <= "
+                    elif tok.type_ == TT_GEQ:
+                        bool_block.bool_statement += " >= "
+                    elif tok.type_ == TT_AND:
+                        bool_block.bool_statement += " && "
+                    elif tok.type_ == TT_OR:
+                        bool_block.bool_statement += " || "
+                    elif tok.type_ == TT_RPAREN:
+                        self.__advance()
+                        break
+                    else:
+                        NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
+                    self.__advance()
+                if self.__current_token.type_ == TT_LCURL:
+                    code_block = CodeBlock()
+                    self.__advance()
+                    while self.__current_token.type_ != TT_RCURL:
+                        code_block = self.__check_and_make_type(code_block)
+                    self.__advance()
+                else:
+                    NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+            else:
+                NewError("NoSemicolonFoundButExpected")
+            return ForNode(cnt_init, bool_block, code_block)
 
     def __mk_id(self):
         tok = self.__current_token
@@ -723,6 +800,8 @@ class Parser:
             node = self.__elif()
         elif tok.value == "while":
             node = self.__while()
+        elif tok.value == "for":
+            node = self.__for()
         else:
             node = self.__call_or_refference()
         return node
