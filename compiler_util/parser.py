@@ -7,7 +7,8 @@ TYPES = [
     "int",
     "flt",
     "str",
-    "char"
+    "char",
+    "cock"
 ]
 INSTRUCTIONS = [
     "int",
@@ -19,7 +20,10 @@ INSTRUCTIONS = [
     "struct",
     "if",
     "else",
-    "elif"
+    "elif",
+    "for",
+    "while",
+    "cock"
 ]
 
 # NODES
@@ -960,6 +964,8 @@ class Parser:
         elif tok.value == "str":
             node = self.__assign(tok.value)
         elif tok.value == "char":
+            node = self.__assign(tok.value)
+        elif tok.value == "cock":
             node = self.__assign(tok.value)
         elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char"):
             node = self.__assign(tok.value)

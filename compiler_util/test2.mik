@@ -6,6 +6,9 @@ str bb = "Hello "
 str cc = "World!"
 int c = a+b
 
+cock cock_type = 10
+cock cock_array[5]
+
 int array[5]
 //flt array2[5]
 //str array3[5]

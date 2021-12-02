@@ -46,6 +46,10 @@ class Generator:
                 code_ = self.__generate_char_asgn(node)
             elif node.type_ == "char_arr":
                 code_ = self.__generate_char_arr_asgn(node)
+            elif node.type_ == "cock":
+                code_ = self.__generate_cock_asgn(node)
+            elif node.type_ == "cock_arr":
+                code_ = self.__generate_cock_arr_asgn(node)
             elif node.type_ in self.custom_types:
                 code_ = self.__generate_custom_type(node)
             elif node.type_ in self.custom_types_arr:
@@ -70,6 +74,10 @@ class Generator:
                 code_ = self.__generate_char_reasgn(node)
             elif node.type_.startswith("char_arr_re"):
                 code_ = self.__generate_char_arr_reasgn(node)
+            elif node.type_ == "cock":
+                code_ = self.__generate_cock_reasgn(node)
+            elif node.type_.startswith("cock_arr_re"):
+                code_ = self.__generate_cock_arr_reasgn(node)
             else:
                 NewError("well wtf", node)
             return code_, self.is_n_main
@@ -250,6 +258,28 @@ class Generator:
             return code_
     def __generate_char_arr_asgn(self, node):
         code_ = "char"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
+    def __generate_cock_asgn(self, node):
+        code_ = "unsigned volatile long long int"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_cock_arr_asgn(self, node):
+        code_ = "unsigned volatile long long int"
         code_ += "* " if node.pointer else " "
         code_ += node.name+"["
         code_ += str(self.__gen(node.value)[0])
