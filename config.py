@@ -1,1 +1,0 @@
-src_path = '/Users/moritz/Desktop/Programmieren/Mik-Pl/MikProgrammingLanguage'
