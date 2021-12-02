@@ -14,4 +14,6 @@
 - flt
 - char
 - [] (arrays)
+- * (pointer)
+- & (derefferencer)
 (see more at: URL)
