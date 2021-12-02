@@ -1,1 +1,1 @@
-src_path = 'C:/Users/Moritz/OneDrive/Desktop/better_mik'
+src_path = '/Users/moritz/Desktop/Programmieren/Mik-Pl/MikProgrammingLanguage'

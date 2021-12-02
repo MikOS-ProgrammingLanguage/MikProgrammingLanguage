@@ -2,6 +2,7 @@ from compiler_util.preprocessor import *
 from compiler_util.lexer import *
 from compiler_util.error import *
 
+CUSTOM_TYPES = {}
 TYPES = [
     "int",
     "flt",
@@ -16,7 +17,6 @@ INSTRUCTIONS = [
     "mikf",
     "mikas",
     "struct",
-    "bool",
     "if",
     "else",
     "elif"
@@ -122,8 +122,13 @@ class BinOpNode:
         return f"({self.left_node}, {self.op_tok}, {self.right_node})"
 
 class UnaryOpNode:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, op_tok, tok) -> None:
+        self.op_tok = op_tok
+        self.tok = tok
+        self.deref = False
+    
+    def __repr__(self) -> str:
+        return f"({self.op_tok}{self.tok})"
 
 class AsignmentNode:
     def __init__(self, type_, pointer, name, op=None, value=None) -> None:
@@ -137,12 +142,14 @@ class AsignmentNode:
         return f"({self.type_} {self.name} {self.op} {self.value})"
 
 class ReAsignementNode:
-    def __init__(self, type_, pointer, name, op=None, value=None) -> None:
-        self.type_ = type_
+    def __init__(self, type_, pointer, name, op=None, value=None, arr=False) -> None:
+        self.type_ = type_[0] if arr else type_
         self.pointer = pointer
         self.name = name
         self.value = value
         self.op = op
+        if arr:
+            self.idx = type_[1]
     
     def __repr__(self) -> str:
         return f"(re {self.type_} {self.name} {self.op} {self.value}"
@@ -156,6 +163,14 @@ class ArgBlockNode:
     def __repr__(self) -> str:
         return f"{self.bool_bl_list}"
 
+class ArrayRefference:
+    def __init__(self, name, arr_len) -> None:
+        self.name = name
+        self.arr_len = arr_len
+    
+    def __repr__(self) -> str:
+        return f"(array: {self.name}[{self.arr_len}])"
+
 class FunctionNode:
     def __init__(self, function_name, return_type, arg_block: ArgBlockNode, code_block: CodeBlock) -> None:
         self.func_name = function_name
@@ -165,6 +180,15 @@ class FunctionNode:
     
     def __repr__(self) -> str:
         return f"({self.func_name} ({self.arg_block}) -> {self.ret_type} {self.code_block})"
+
+class StructNode:
+    def __init__(self, struct_name, typedef, code_block) -> None:
+        self.struct_name = struct_name
+        self.typedef = typedef
+        self.code_bl = code_block
+    
+    def __repr__(self) -> str:
+        return f"(struct {self.struct_name} {'typedef' if self.typedef else ''} "+"{"+str(self.code_bl)+"})"
 
 class AssemblyNode:
     def __init__(self, function_name, return_type, arg_block: ArgBlockNode, asm) -> None:
@@ -258,6 +282,15 @@ class Parser:
         elif self.__current_token.type_ == TT_DEBUG:
             node.add_arg(DebugNode(TT_DEBUG))
             self.__advance()
+        elif self.__current_token.type_ == TT_OVERRIDE:
+            self.__advance()
+            prev_func = self.FUNCTIONS
+            prev_vars = self.VARS
+            self.VARS = {}
+            self.FUNCTIONS = {}
+            res = self.__mk_id()
+            self.FUNCTIONS = prev_func
+            self.VARS = prev_vars
         else:
             return node
 
@@ -281,26 +314,78 @@ class Parser:
             elif self.__current_token.type_ == TT_DEBUG:
                 self.__programm_node.add_node(DebugNode(TT_DEBUG))
                 self.__advance()
+            elif self.__current_token.type_ == TT_OVERRIDE:
+                self.__advance()
+                prev_func = self.FUNCTIONS
+                prev_vars = self.VARS
+                self.VARS = {}
+                self.FUNCTIONS = {}
+                res = self.__mk_id()
+                self.FUNCTIONS = prev_func
+                self.VARS = prev_vars
             else:
                 break
 
-        return self.__programm_node
+        return self.__programm_node, CUSTOM_TYPES
+
+    def __struct_get(self):
+        if self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+            temp_name = self.__current_token
+            self.__advance()
+            temp_name.value += "."
+            self.__advance()
+            temp_name.value += self.__current_token.value
+            return temp_name
+        else:
+            return self.__current_token
 
     def __factor(self):
         tok = self.__current_token
         if tok.type_ in (TT_INT, TT_FLOAT):
             self.__advance()
             return NumberNode(tok)
-        
+        elif tok.type_ == TT_MINUS:
+            self.__advance()
+            if self.__current_token.type_ == TT_MINUS:
+                self.__advance()
+                tok_ = self.__current_token
+                self.__advance()
+                return NumberNode(tok_)
+            elif self.__current_token.type_ in (TT_INT, TT_FLOAT, TT_ID):
+                if self.__current_token.type_ == TT_ID and self.__current_token.value in self.VARS and self.__get_token(1).type_ != TT_LBRK:
+                    if self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                        temp_name = self.__current_token.value
+                        self.__advance()
+                        temp_name += "."
+                        self.__advance()
+                        temp_name += self.__current_token.value
+                        return UnaryOpNode("-", temp_name)
+                        
+                    tok_ = self.__current_token
+                    self.__advance()
+                    return UnaryOpNode("-", tok_.value)
+                else:
+                    tok_ = self.__current_token
+                    self.__advance()
+                    return UnaryOpNode("-", tok_.value)
         elif tok.type_ in (TT_ID, TT_KAND):
             deref = False
             if tok.type_ == TT_KAND:
                 deref = True
                 self.__advance()
-                tok = self.__current_token
-            if tok.value in self.VARS:
+                tok = self.__struct_get()
+                #tok = self.__current_token
+            if tok.value in self.VARS and self.__get_token(1).type_ != TT_LBRK:
                 tok2 = self.VARS.get(tok.value)
-                tok2 = tok.value
+                tok2 = self.__struct_get()
+                tok2 = tok2.value
+            elif tok.value in self.VARS and self.__get_token(1).type_ == TT_LBRK:
+                tok2 = self.VARS.get(tok.value)
+                self.__advance()
+                self.__advance()
+                arr_len = self.__expr()
+                self.__advance()
+                return ArrayRefference(tok.value, arr_len)
             elif tok.value in self.FUNCTIONS:
                 tok2 = self.FUNCTIONS.get(tok.value)
                 tok2 = tok.value
@@ -331,8 +416,9 @@ class Parser:
             left = BinOpNode(left, op_tok, right)   # left factor is now bin op
         
         return left
-    def __assign(self, type_, name_=""):
+    def __assign(self, type_, name_="", normal_decl=True):
         deref = False
+        arr_len = ""
         self.__advance()
         if self.__current_token.type_ == TT_MUL:
             pointer = True
@@ -347,7 +433,21 @@ class Parser:
             # should be = now
         elif name_ != "":
             name = name_
-        if self.__current_token.type_ in (TT_ASSGN, TT_REASGN):
+        if self.__current_token.type_ == TT_LBRK and not type_.endswith("_arr"):
+            self.__advance()
+            if self.__current_token.type_ == TT_RBRK:
+                arr_len = ""
+            else:
+                arr_len = self.__expr()
+                if self.__current_token.type_ != TT_RBRK:
+                    NewError("Closing Bracket expected", f"at {self.__current_token.section} at line {self.__current_token.ln_count}")
+                else:
+                    self.__advance()
+                    self.VARS.update({name:AsignmentNode(type_+"_arr", pointer, name, "=", arr_len)})
+                    type_ += "_arr" if not type_.endswith("_arr") else ""
+                    return AsignmentNode(type_, pointer, name, "=", arr_len)
+        
+        if self.__current_token.type_ in (TT_ASSGN, TT_REASGN) and normal_decl:
             asgn_op = "="
             self.__advance()
             if self.__current_token.type_ == TT_ID and self.__current_token.value in self.FUNCTIONS:
@@ -389,16 +489,43 @@ class Parser:
     def __call_or_refference(self):
         call = self.__current_token
         call_name = self.__current_token.value
-
-        #print(call)
-        #print(self.__get_token(1))
+        old_c_name = call_name
+        if self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+            self.__advance()
+            old_c_name = call_name + "."
+            self.__advance()
+            call_name = self.__current_token.value
+            old_c_name += call_name
+        #print(call_name)
+        #print(self.VARS)
 
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
         elif call_name in self.VARS and call_name != "return":
-            #print(self.__current_token)
-            temp_node = self.__assign(type_=self.VARS.get(call_name).type_.lower(), name_=call_name)
-            node = ReAsignementNode(temp_node.type_, temp_node.pointer, temp_node.name, temp_node.op, temp_node.value)
+            if self.VARS.get(call_name).type_.endswith("_arr"):
+                prev_arr_len = self.VARS.get(call_name).value
+                self.__advance()
+                if self.__current_token.type_ == TT_LBRK:
+                    self.__advance()
+                    arr_len = self.__expr()
+                    if self.__current_token.type_ == TT_RBRK:
+                        if self.__get_token(1).type_ == TT_REASGN:
+                            res = self.__assign(self.VARS.get(call_name).type_, name_=call_name)
+                            self.VARS.update({call_name:AsignmentNode(res.type_, res.pointer, call_name, "=", prev_arr_len)})
+                            new_res = ReAsignementNode((res.type_+"_re", arr_len), res.pointer, call_name, "=", res.value, True)
+                            return new_res
+                        elif self.__get_token(1).type_ == TT_ASSGN:
+                            NewError("AssignedTwiceError", f"You tried to assign a value to an existing variable. Make sure to use '?=' at {self.__current_token.section} at line {self.__current_token.ln_count}")
+                        else:
+                            
+                            NewError("CalledButNotAssignedError", f"Tried to call a Array at {self.__current_token.section} at line: {self.__current_token.ln_count}")
+                    else:
+                        NewError("BracketNotClosedError", f"Bracket was opened but never closed at: {self.__current_token.section} at line: {self.__current_token.ln_count}")
+                else:
+                    NewError("BracketExpectedError", f"A bracket was expected but not found at: {self.__current_token.section} at line: {self.__current_token.ln_count}")
+            else:
+                temp_node = self.__assign(type_=self.VARS.get(call_name).type_.lower(), name_=call_name)
+                node = ReAsignementNode(temp_node.type_, temp_node.pointer, old_c_name, temp_node.op, temp_node.value)
         else:
             self.__advance()
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:
@@ -414,6 +541,8 @@ class Parser:
                     elif self.__current_token.value == "str":
                         node2 = self.__assign(self.__current_token.value)
                     elif self.__current_token.value == "char":
+                        node2 = self.__assign(self.__current_token.value)
+                    elif self.__current_token.value in CUSTOM_TYPES:
                         node2 = self.__assign(self.__current_token.value)
                     elif self.__current_token.type_ == TT_COMMA:
                         self.__advance()
@@ -550,6 +679,43 @@ class Parser:
             self.VARS = old_vars
             self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
             return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
+    def __struct(self):
+        typedef = False
+        name = ""
+        self.__advance()
+        if self.__current_token.type_ == TT_ID:
+            name = self.__current_token.value
+            self.__advance()
+            if self.__current_token.type_ == TT_ID and self.__current_token.value == "typedef":
+                typedef = True
+                self.__advance()
+            if self.__current_token.type_ == TT_LCURL:
+                self.__advance()
+                code_block = CodeBlock()
+                names = []
+                while self.__current_token.type_ != TT_RCURL and self.__current_token != None:
+                    tok = self.__current_token
+                    if tok.value == "int":
+                        node = self.__assign(tok.value)
+                    elif tok.value == "flt":
+                        node = self.__assign(tok.value)
+                    elif tok.value == "str":
+                        node = self.__assign(tok.value)
+                    elif tok.value == "char":
+                        node = self.__assign(tok.value)
+                    else:
+                        NewError("IllegalDeclarationError", f"Illegal decleration in struct at {self.__current_token.section} at line {self.__current_token.ln_count}")
+                    code_block.add_arg(node)
+                    names.append(node.name)
+                self.__advance()
+                if typedef:
+                    TYPES.append(name)
+                    CUSTOM_TYPES.update({name:names})
+                return StructNode(name, typedef, code_block)
+            else:
+                NewError("CurlyBracketExpectedError", f"A curly bracket was expected but not found at {self.__current_token.section} at line {self.__current_token.ln_count}")
+        else:
+            NewError("FunctionNameExpectedError", f"A struct name was expected but not found at {self.__current_token.section} at line {self.__current_token.ln_count}")
 
     def __if(self):
         self.__advance()
@@ -601,7 +767,6 @@ class Parser:
                 self.__advance()
             else:
                 NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
-            print(self.__current_token)
             return IfNode(bool_block, code_block)
     def __else(self):
         self.__advance()
@@ -796,10 +961,12 @@ class Parser:
             node = self.__assign(tok.value)
         elif tok.value == "char":
             node = self.__assign(tok.value)
+        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char"):
+            node = self.__assign(tok.value)
         elif tok.value == "mikf":
             node = self.__mikf()
         elif tok.value == "struct":
-            pass
+            node = self.__struct()
         elif tok.value == "mikas":
             node = self.__mikas()
         elif tok.value == "if":

@@ -1,3 +1,5 @@
+config.py
+todo
 /__pycache__
 /compiler_util/__pycache__
 /compiler_util/grammer.md

@@ -1,11 +1,16 @@
 #yoink <test_f.milk>
 #yoink-src <git_pkg>
-int * a = 10
-int b = 20
+int a = 10
+int b = -a + -5
 str bb = "Hello "
 str cc = "World!"
 int c = a+b
 
+int array[5]
+//flt array2[5]
+//str array3[5]
+//char array4[5]
+array[0] ?= 5
 /*
 Hello there fellow multi line cmnt
 */
@@ -15,10 +20,9 @@ mikf add(int a, int b) -> int {
 	int c = a+b
 	return c
 }
+int array_int = array[0]
 
-
-
-int wtf = add(1, 20)
+int wtf = add(array_int, 20)
 mikas add_lol() -> int {
 	addq %rdi, %rsi
 	movq %rdi, %rax
@@ -50,3 +54,15 @@ char_ ?= char_ + 'o'
 char_ ?= char_ + 'l'
 
 int this_should_be_deref = &a
+
+// Struct test
+struct hallo typedef {
+	int inside_struct
+	int inside_struct2
+}
+//hallo * struct_array[10]
+hallo test_struct
+test_struct.inside_struct ?= 50
+test_struct.inside_struct2 ?= 100
+
+int struct_type_refference = test_struct.inside_struct

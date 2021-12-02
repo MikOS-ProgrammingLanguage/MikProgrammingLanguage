@@ -5,10 +5,14 @@ from compiler_util.lexer import *
 from compiler_util.parser import *
 
 class Generator:
-    def __init__(self, Root: RootNode) -> None:
+    def __init__(self, Root: RootNode, custom_types) -> None:
         self.root_node = Root
         self.is_n_main = False
         self.is_in_arg_parse = False
+        self.custom_types = custom_types
+        self.custom_types_arr = []
+        for i in self.custom_types:
+            self.custom_types_arr.append(i+"_arr")
 
     def generate(self):
         c_code = "int main(void) {"
@@ -25,30 +29,49 @@ class Generator:
 
     def __gen(self, node, ign_bin_op=False):
         code_ = None
-        #print(type(node))
         if type(node) == AsignmentNode:
             if node.type_ == "int":
                 code_ = self.__generate_int_asgn(node)
+            elif node.type_ == "int_arr":
+                code_ = self.__generate_int_arr_asgn(node)
             elif node.type_ == "str":
                 code_ = self.__generate_str_asgn(node)
+            elif node.type_ == "str_arr":
+                code_ = self.__generate_str_arr_asgn(node)
             elif node.type_ == "flt":
                 code_ = self.__generate_flt_asgn(node)
+            elif node.type_ == "flt_arr":
+                code_ = self.__generate_flt_arr_asgn(node)
             elif node.type_ == "char":
                 code_ = self.__generate_char_asgn(node)
+            elif node.type_ == "char_arr":
+                code_ = self.__generate_char_arr_asgn(node)
+            elif node.type_ in self.custom_types:
+                code_ = self.__generate_custom_type(node)
+            elif node.type_ in self.custom_types_arr:
+                code_ = self.__generate_custom_type_arr(node)
             else:
                 NewError("well wtf")
             return code_, self.is_n_main
         elif type(node) == ReAsignementNode:
             if node.type_ == "int":
                 code_ = self.__generate_int_reasgn(node)
+            elif str(node.type_).startswith("int_arr_re"):
+                code_ = self.__generate_int_arr_reasgn(node)
             elif node.type_ == "str":
                 code_ = self.__generate_str_reasgn(node)
+            elif node.type_.startswith("str_arr_re"):
+                code_ = self.__generate_str_arr_reasgn(node)
             elif node.type_ == "flt":
                 code_ = self.__generate_flt_reasgn(node)
+            elif node.type_.startswith("flt_arr_re"):
+                code_ = self.__generate_flt_arr_reasgn(node)
             elif node.type_ == "char":
                 code_ = self.__generate_char_reasgn(node)
+            elif node.type_.startswith("char_arr_re"):
+                code_ = self.__generate_char_arr_reasgn(node)
             else:
-                NewError("well wtf")
+                NewError("well wtf", node)
             return code_, self.is_n_main
         elif type(node) == BinOpNode:
             if ign_bin_op:
@@ -67,6 +90,12 @@ class Generator:
                 code_ += "&"
             code_ += str(node.tok.value)
             return code_, self.is_n_main
+        elif type(node) == UnaryOpNode:
+            code_ = ""
+            if node.deref:
+                code_ += "&"
+            code_ += str(node.op_tok)+str(node.tok)
+            return code_, self.is_n_main
         elif type(node) == StrNode:
             code_ = ""
             if node.deref:
@@ -83,6 +112,9 @@ class Generator:
             return code_, self.is_n_main
         elif type(node) == ReturnNode:
             code_ = "return "+node.tok.tok + ";\n"
+            return code_, self.is_in_arg_parse
+        elif type(node) == StructNode:
+            code_ = self.__generate_struct(node)
             return code_, self.is_in_arg_parse
         elif type(node) == FunctionNode:
             code_ = self.__generate_func(node)
@@ -108,8 +140,32 @@ class Generator:
         elif type(node) == ForNode:
             code_ = str(self.__generate_for(node))
             return code_, self.is_n_main
+        elif type(node) == ArrayRefference:
+            code_ = str(self.__generate_array_ref(node))
+            return code_, self.is_n_main
         else:
             NewCritical("Ok you fucked with the compiler. STOP IT!")
+
+    def __generate_array_ref(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.arr_len)[0])
+        code_ += "]"
+        return code_
+    def __generate_custom_type(self, node):
+        code = node.type_
+        code += "* " if node.pointer else " "
+        code += node.name
+        code += ";\n"
+        return code
+    def __generate_custom_type_arr(self, node):
+        code = (node.type_).split("_arr")[0]
+        code += "* " if node.pointer else " "
+        code += node.name
+        code += "["
+        code += str(self.__gen(node.value)[0])
+        code += "];\n"
+        return code
 
     def __generate_int_asgn(self, node):
         code_ = "int"
@@ -118,7 +174,7 @@ class Generator:
         if node.value != None:
             code_ += f" {node.op} "
             code_ += str(self.__gen(node.value)[0])
-            code_ += ";\n"
+            code_ += ";\n" if not self.is_in_arg_parse else ""
             return code_
         else:
             if self.is_in_arg_parse:
@@ -126,6 +182,13 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
+    def __generate_int_arr_asgn(self, node):
+        code_ = "int"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
     def __generate_flt_asgn(self, node):
         code_ = "float"
         code_ += "* " if node.pointer else " "
@@ -141,6 +204,13 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
+    def __generate_flt_arr_asgn(self, node):
+        code_ = "float"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
     def __generate_str_asgn(self, node):
         code_ = "char* "
         code_ += node.name
@@ -155,6 +225,12 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
+    def __generate_str_arr_asgn(self, node):
+        code_ = "char* "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
     def __generate_char_asgn(self, node):
         #print("lol")
         code_ = "char"
@@ -172,6 +248,13 @@ class Generator:
             else:
                 code_ += "';\n"
             return code_
+    def __generate_char_arr_asgn(self, node):
+        code_ = "char"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
 
     def __generate_int_reasgn(self, node):
         code_ = node.name
@@ -186,10 +269,40 @@ class Generator:
             else:
                 code_ += ";\n"
             return code_
+    def __generate_int_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
     def __generate_flt_reasgn(self, node):
         code_ = node.name
         if node.value != None:
             code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_flt_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
             code_ += str(self.__gen(node.value)[0])
             code_ += ";\n"
             return code_
@@ -215,6 +328,23 @@ class Generator:
                 code_ += ""
             code_ += "\");\n"
             return code_
+    def __generate_str_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        code_ += f"strcpy({code_.split(' = ')[0]}, \""
+        if node.value != None:
+            code_ += str(self.__gen(node.value, True)[0])
+            code_ += "\");\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ""
+            code_ += "\");\n"
+        return code_
     def __generate_char_reasgn(self, node):
         #print("lol2")
         code_ = node.name
@@ -229,13 +359,30 @@ class Generator:
             else:
                 code_ += "';\n"
             return code_
+    def __generate_char_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
 
     def __generate_f_call(self, node):
         f_call_str = f"{node.func_name}("
         temp_args = []
+        self.is_in_arg_parse = True
         for i in node.args:
             temp_args.append(str(self.__gen(i)[0]))
             temp_args.append(",")
+        self.is_in_arg_parse = False
         del temp_args[len(temp_args)-1]
         for i in temp_args:
             f_call_str += i
@@ -280,6 +427,24 @@ class Generator:
         asm_func_str += "\");}\n"
         self.is_n_main = False
         return asm_func_str
+    def __generate_struct(self, node):
+        if node.typedef:
+            code = f"typedef "
+            code += "struct {\n"
+            for i in node.code_bl.code_bl_list:
+                code += str(self.__gen(i)[0])
+            code += "}"
+            code += node.struct_name
+            code += ";\n"
+            return code
+        else:
+            code = "struct "
+            code += node.struct_name
+            code += "{\n"
+            for i in node.code_bl.code_bl_list:
+                code += str(self.__gen(i)[0])
+            code += "};\n"
+            return code
 
     def __generate_if(self, node):
         if_str = "if ("
@@ -337,11 +502,13 @@ def generate(input_pth, output_pth):
         content = f.read()
         f.close()
     preprocessed = preprocess(content, input_pth[1])
+    #print(preprocessed)
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
-    parsed = Parser(lexed).parse()
+    parsed, c_types = Parser(lexed).parse()
     #print(parsed)
-    g = Generator(parsed).generate()
+    #print(c_types)
+    g = Generator(parsed, c_types).generate()
     with open(output_pth[1]+".c", "w") as wf:
         wf.write(g)
         wf.close()

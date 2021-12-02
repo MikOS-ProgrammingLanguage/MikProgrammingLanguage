@@ -1,10 +1,10 @@
+=== IDEAS ===
+- const
+
 === TODO ===
 - sec-ignore(section names, and more section names to ignore)
 
-- add plus equals minus equals
-- lists for fuck sake
-- negative numbers ahhhhhhhhhhhhh
-- structs
+- (add plus equals minus equals)
 
 === DONE ===
 - Throw error for double variable decleration
@@ -21,7 +21,8 @@
 - while
 - re-asign vars with '?='
 - for (for (int i = 10; i < 50) {code})
-
+- arrays
+- structs
 
 
 === C-FUNCTIONS ====
@@ -32,3 +33,21 @@ char* strcpy(char* dest, const char* src) {
     } while (*src != 0);
     return 0;
 }
+
+
+
+=== struct definition ===
+
+struct test typedef {
+    str addresse
+    str name
+    int hausnummer
+}
+
+(struct) test (*) TestStruct
+
+test.addresse = "Xy"
+test.name = "test name"
+test.hausnummer = 21
+
+int haus_nummer_kopie = test.hausnummer

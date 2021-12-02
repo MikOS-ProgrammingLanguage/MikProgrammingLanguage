@@ -14,11 +14,3 @@ char* strcpy(char* dest, const char* src) {
     } while (*src != 0);
     return 0;
 }
-
-int main()
-{
-    char* a = "Hello ";
-    char* b = "World";
-    strcnct(&a, &b);
-    printf("%s", a);
-}

@@ -1,43 +1,47 @@
 from compiler_util.error import NewError
 
 
-CHARS      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
-NUMBERS    = "0123456789"
+CHARS       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+NUMBERS     = "0123456789"
 
 
-TT_LTHEN   = "LTHEN"
-TT_GTHEN   = "GTHEN"
-TT_LEQ     = "LEQ"
-TT_GEQ     = "GEQ"
-TT_AND     = "AND"
-TT_OR      = "OR"
-TT_NEQ     = "NEQ"
-TT_NOT     = "NOT"
+TT_LTHEN    = "LTHEN"
+TT_GTHEN    = "GTHEN"
+TT_LEQ      = "LEQ"
+TT_GEQ      = "GEQ"
+TT_AND      = "AND"
+TT_OR       = "OR"
+TT_NEQ      = "NEQ"
+TT_NOT      = "NOT"
 
-TT_KAND    = "KAND"
+TT_KAND     = "KAND"
+TT_DOT      = "DOT"
 
-TT_PLUS    = "PLS"
-TT_MINUS   = "MIN"
-TT_MUL     = "MUL"
-TT_DIV     = "DIV"
-TT_INT     = "INT"
-TT_FLOAT   = "FLT"
-TT_ID      = "ID"
-TT_STRING  = "STR"
-TT_CHAR    = "CHAR"
-TT_ASSGN   = "ASSGN"
-TT_REASGN  = "REASGN"
-TT_EQ      = "EQUALS"
-TT_LPAREN  = "LPAREN"
-TT_RPAREN  = "RPAREN"
-TT_LCURL   = "LCURL"
-TT_RCURL   = "RCURL"
-TT_COMMA   = "COMMA"
-TT_ARROW   = "ARROW"
-TT_SEMIC   = "SEMICOLON"
-TT_PERCENT = "PERCENT"
-TT_DEBUG   = "DEBUG"
-TT_EOF     = "EOF"
+TT_PLUS     = "PLS"
+TT_MINUS    = "MIN"
+TT_MUL      = "MUL"
+TT_DIV      = "DIV"
+TT_INT      = "INT"
+TT_FLOAT    = "FLT"
+TT_ID       = "ID"
+TT_STRING   = "STR"
+TT_CHAR     = "CHAR"
+TT_ASSGN    = "ASSGN"
+TT_REASGN   = "REASGN"
+TT_EQ       = "EQUALS"
+TT_LPAREN   = "LPAREN"
+TT_RPAREN   = "RPAREN"
+TT_LBRK     = "LBRK"
+TT_RBRK     = "RBRK"
+TT_LCURL    = "LCURL"
+TT_RCURL    = "RCURL"
+TT_COMMA    = "COMMA"
+TT_ARROW    = "ARROW"
+TT_SEMIC    = "SEMICOLON"
+TT_PERCENT  = "PERCENT"
+TT_DEBUG    = "DEBUG"
+TT_OVERRIDE = "OVERRIDE"
+TT_EOF      = "EOF"
 
 class Position:
     def __init__(self, prev=None, section=None) -> None:
@@ -86,6 +90,18 @@ class Lexer:
                     self.__sec.ln_cnt += 1
                 self.__advance()
             
+            elif self.__current_char == ".":
+                tokens.append(Token(TT_DOT, self.__sec.section, self.__sec.ln_cnt, "."))
+                self.__advance()
+
+            elif self.__current_char == "[":
+                tokens.append(Token(TT_LBRK, self.__sec.section, self.__sec.ln_cnt, "["))
+                self.__advance()
+            
+            elif self.__current_char == "]":
+                tokens.append(Token(TT_RBRK, self.__sec.section, self.__sec.ln_cnt, "]"))
+                self.__advance()
+
             elif self.__current_char == ";":
                 tokens.append(Token(TT_SEMIC, self.__sec.section, self.__sec.ln_cnt, ";"))
                 self.__advance()
@@ -256,6 +272,9 @@ class Lexer:
                         self.__advance()
                     elif comp_flg_kind == "debug":
                         tokens.append(Token(TT_DEBUG, self.__sec.section, self.__sec.ln_cnt))
+                        self.__advance()
+                    elif comp_flg_kind == "override":
+                        tokens.append(Token(TT_OVERRIDE, self.__sec.section, self.__sec.ln_cnt))
                         self.__advance()
                     else:
                         NewError("InvalidCompilerFlag", "An invalid compiler flag was specified")

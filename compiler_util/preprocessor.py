@@ -54,8 +54,9 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True, mip_pth=Fals
                 content = content.split("\n")
                 content2 = ""
                 for i in content:
-                    if (i.startswith("mikf") or i.startswith("const")) and i in text:
-                        content2 += (i+" owt")
+                    if i.startswith("mikf"):
+                        if i.split("(")[0] in text:
+                            content2 += ("@override "+i)
                     else:
                         content2 += i
                     content2 += "\n"
