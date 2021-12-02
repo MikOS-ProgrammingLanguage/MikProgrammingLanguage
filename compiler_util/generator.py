@@ -123,7 +123,10 @@ class Generator:
             return code_, self.is_in_arg_parse
         elif type(node) == StructNode:
             code_ = self.__generate_struct(node)
-            return code_, self.is_in_arg_parse
+            return code_, self.is_n_main
+        elif type(node) == EstructNode:
+            code_ = self.__generate_struct(node, True)
+            return code_, self.is_n_main
         elif type(node) == FunctionNode:
             code_ = self.__generate_func(node)
             return code_, True
@@ -457,10 +460,13 @@ class Generator:
         asm_func_str += "\");}\n"
         self.is_n_main = False
         return asm_func_str
-    def __generate_struct(self, node):
+    def __generate_struct(self, node, e_struct=False):
         if node.typedef:
             code = f"typedef "
-            code += "struct {\n"
+            if e_struct:
+                code += "struct __attribute__((packed)) {\n"
+            else:
+                code += "struct {\n"
             for i in node.code_bl.code_bl_list:
                 code += str(self.__gen(i)[0])
             code += "}"
@@ -468,7 +474,10 @@ class Generator:
             code += ";\n"
             return code
         else:
-            code = "struct "
+            if e_struct:
+                code = "struct __attribute__((packed)) "
+            else:
+                code = "struct "
             code += node.struct_name
             code += "{\n"
             for i in node.code_bl.code_bl_list:

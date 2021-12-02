@@ -18,6 +18,7 @@ INSTRUCTIONS = [
     "mikf",
     "mikas",
     "struct",
+    "estruct",
     "if",
     "else",
     "elif",
@@ -184,6 +185,12 @@ class FunctionNode:
     
     def __repr__(self) -> str:
         return f"({self.func_name} ({self.arg_block}) -> {self.ret_type} {self.code_block})"
+
+class EstructNode:
+    def __init__(self, struct_name, typedef, code_block) -> None:
+        self.struct_name = struct_name
+        self.typedef = typedef
+        self.code_bl = code_block
 
 class StructNode:
     def __init__(self, struct_name, typedef, code_block) -> None:
@@ -683,7 +690,7 @@ class Parser:
             self.VARS = old_vars
             self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
             return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
-    def __struct(self):
+    def __struct(self, e_struct=False):
         typedef = False
         name = ""
         self.__advance()
@@ -715,7 +722,10 @@ class Parser:
                 if typedef:
                     TYPES.append(name)
                     CUSTOM_TYPES.update({name:names})
-                return StructNode(name, typedef, code_block)
+                if e_struct:
+                    return EstructNode(name, typedef, code_block)
+                else:
+                    return StructNode(name, typedef, code_block)
             else:
                 NewError("CurlyBracketExpectedError", f"A curly bracket was expected but not found at {self.__current_token.section} at line {self.__current_token.ln_count}")
         else:
@@ -973,6 +983,8 @@ class Parser:
             node = self.__mikf()
         elif tok.value == "struct":
             node = self.__struct()
+        elif tok.value == "estruct":
+            node = self.__struct(True)
         elif tok.value == "mikas":
             node = self.__mikas()
         elif tok.value == "if":
