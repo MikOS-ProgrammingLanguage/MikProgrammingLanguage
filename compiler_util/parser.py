@@ -258,8 +258,9 @@ class ForNode:
 
 
 class Parser:
-    def __init__(self, tokens: list) -> None:
+    def __init__(self, tokens: list, illegal_names) -> None:
         self.__tokens = tokens
+        self.__ilegal_names = illegal_names
         self.__pos = -1
         self.__current_token = None
         self.__programm_node = RootNode()
@@ -637,8 +638,13 @@ class Parser:
                     code_block = CodeBlock()
                     func_decl = True
             self.VARS = old_vars
-            self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)})
-            return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
+            if func_name in self.__ilegal_names and not func_decl:
+                NewError("Function is allready defined in another file.")
+            else:
+                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)})
+                return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
+        else:
+            NewError("Function is allready defined")
     def __mikas(self):
         self.__advance()
         func_name = ""

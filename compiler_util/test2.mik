@@ -8,7 +8,7 @@ int c = a+b
 
 cock cock_type = 10
 cock cock_array[5]
-
+@section("lol")
 int array[5]
 //flt array2[5]
 //str array3[5]
@@ -18,6 +18,7 @@ array[0] ?= 5
 Hello there fellow multi line cmnt
 */
 // success
+@secend
 mikf max(int a, int b) -> int
 
 mikf add(int a, int b) -> int {

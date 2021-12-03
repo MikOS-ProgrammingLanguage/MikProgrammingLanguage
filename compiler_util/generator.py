@@ -1,9 +1,14 @@
-import time
+import time, threading, os
 from compiler_util.parser import RootNode
 from compiler_util.preprocessor import *
 from compiler_util.lexer import *
 from compiler_util.parser import *
+MIK = ["""
 
+""", """
+
+"""]
+FINISHED = False
 class Generator:
     def __init__(self, Root: RootNode, custom_types) -> None:
         self.root_node = Root
@@ -538,7 +543,19 @@ class Generator:
     def __repr__(self) -> str:
         return "Why the fuck would you want to represent the code generator!"
 
+#def __draw_mik():
+#    idx = 0
+#    while not FINISHED:
+#        print(MIK[idx % len(MIK)], end="\r")
+#        idx += 1
+#        time.sleep(0.1)
+
+
 def generate(args):
+#    if args.mik:
+#        # start thread with wayving mik
+#        t1 = threading.Thread(target=__draw_mik)
+#        t1.start()
     input_pth = args.i
     output_pth = args.o
 
@@ -550,12 +567,18 @@ def generate(args):
     #print(preprocessed)
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
-    parsed, c_types = Parser(lexed).parse()
+    if args.nCnfg == None:
+        illegal_names = []
+    else:
+        illegal_names = args.nCnfg.split(":")
+    parsed, c_types = Parser(lexed, illegal_names=illegal_names).parse()
     #print(parsed)
     #print(c_types)
     g = Generator(parsed, c_types).generate()
     with open(output_pth+".c", "w") as wf:
         wf.write(g)
         wf.close()
+    #time.sleep(60)
+    FINISHED = True
     end = time.perf_counter()
     NewInfo(f"File: {output_pth}.c successfully created in {end-start} seconds")
