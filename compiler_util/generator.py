@@ -21,7 +21,8 @@ class Generator:
 
     def generate(self):
         c_code = "int main(void) {"
-        is_n_main_code = "char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}\n//BUILTIN_END\n\n\n"
+		# can give linker errors lel
+        is_n_main_code = "/*char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}*/\n//BUILTIN_END\n\n\n"
         # iterate through all nodes and generate code for them
         for i in self.root_node.nodes:
             code = self.__gen(i)
@@ -260,7 +261,7 @@ class Generator:
             return code_
         else:
             if self.is_in_arg_parse:
-                code_ += "'"
+                code_ += ""
             else:
                 code_ += "';\n"
             return code_
