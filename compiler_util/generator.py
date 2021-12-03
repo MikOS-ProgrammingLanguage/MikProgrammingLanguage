@@ -1,4 +1,5 @@
 import time, threading, os
+
 from compiler_util.parser import RootNode
 from compiler_util.preprocessor import *
 from compiler_util.lexer import *
@@ -22,7 +23,7 @@ class Generator:
     def generate(self):
         c_code = "int main(void) {"
 		# can give linker errors lel
-        is_n_main_code = "/*char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}*/\n//BUILTIN_END\n\n\n"
+        is_n_main_code = "/*char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}*/\ntypedef unsigned long long uint64_t;\ntypedef unsigned int uint32_t;\ntypedef unsigned short uint16_t;\ntypedef unsigned char uint8_t;\ntypedef signed long long int64_t;\ntypedef signed int int32_t;\ntypedef signed short int16_t;\ntypedef signed char int8_t;\n//BUILTIN_END\n\n\n"
         # iterate through all nodes and generate code for them
         for i in self.root_node.nodes:
             code = self.__gen(i)
@@ -56,6 +57,14 @@ class Generator:
                 code_ = self.__generate_cock_asgn(node)
             elif node.type_ == "cock_arr":
                 code_ = self.__generate_cock_arr_asgn(node)
+            elif node.type_ in ("uint8", "uint16", "uint32", "uint64"):
+                code_ = self.__generate_uint_asgn(node)
+            elif node.type_.startswith("uint") and node.type_.endswith("_arr"):
+                code_ = self.__generate_uint_arr_asgn(node)
+            elif node.type_ in ("int8", "int16", "int32", "int64"):
+                code_ = self.__generate_int_num_asgn(node)
+            elif node.type_.startswith("int") and node.type_.endswith("_arr"):
+                code_ = self.__generate_int_num_arr_asgn(node)
             elif node.type_ in self.custom_types:
                 code_ = self.__generate_custom_type(node)
             elif node.type_ in self.custom_types_arr:
@@ -78,12 +87,20 @@ class Generator:
                 code_ = self.__generate_flt_arr_reasgn(node)
             elif node.type_ == "char":
                 code_ = self.__generate_char_reasgn(node)
-            elif node.type_.startswith("char_arr_re"):
+            elif (node.type_).startswith("char_arr_re"):
                 code_ = self.__generate_char_arr_reasgn(node)
             elif node.type_ == "cock":
                 code_ = self.__generate_cock_reasgn(node)
-            elif node.type_.startswith("cock_arr_re"):
+            elif (node.type_).startswith("cock_arr_re"):
                 code_ = self.__generate_cock_arr_reasgn(node)
+            elif node.type_ in ("uint8", "uint16", "uint32", "uint64"):
+                code_ = self.__generate_uint_reasgn(node)
+            elif node.type_ in ("int8", "int16", "int32", "int64"):
+                code_ = self.__generate_int_num_reasgn(node)
+            elif (node.type_).startswith("uint") and node.type_.endswith("_arr_re"):
+                code_ = self.__generate_uint_arr_reasgn(node)
+            elif (node.type_).startswith("int") and node.type_.endswith("_arr_re"):
+                code_ = self.__generate_int_num_arr_reasgn(node)
             else:
                 NewError("well wtf", node)
             return code_, self.is_n_main
@@ -294,6 +311,50 @@ class Generator:
         code_ += str(self.__gen(node.value)[0])
         code_ += "];\n"
         return code_
+    def __generate_uint_asgn(self, node):
+        code_ = node.type_+"_t"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_int_num_asgn(self, node):
+        code_ = node.type_+"_t"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_uint_arr_asgn(self, node):
+        code_ = node.type_.split("_arr")[0]+"_t"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
+    def __generate_int_num_arr_asgn(self, node):
+        code_ = node.type_.split("_arr")[0]+"_t"
+        code_ += "* " if node.pointer else " "
+        code_ += node.name+"["
+        code_ += str(self.__gen(node.value)[0])
+        code_ += "];\n"
+        return code_
 
     def __generate_int_reasgn(self, node):
         code_ = node.name
@@ -398,6 +459,90 @@ class Generator:
                 code_ += "';\n"
             return code_
     def __generate_char_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_cock_reasgn(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_cock_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_uint_reasgn(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_int_num_reasgn(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_uint_arr_reasgn(self, node):
+        code_ = node.name
+        code_ += "["
+        code_ += str(self.__gen(node.idx)[0])
+        code_ += "] = "
+        if node.value != None:
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
+    def __generate_int_num_arr_reasgn(self, node):
         code_ = node.name
         code_ += "["
         code_ += str(self.__gen(node.idx)[0])

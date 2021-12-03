@@ -86,3 +86,26 @@ estruct test_estruct typedef {
 
 test_estruct test__
 test__.test_estruct_var = 10
+
+// uint unt int tests
+uint8  uint8_tt  = 10
+uint8  uint8_tt_l[10]
+uint16 uint16_tt = 10
+uint16 uint16_tt_l[10]
+uint32 uint32_tt = 10
+uint32 uint32_tt_l[10]
+uint64 uint64_tt = 10
+uint64 uint64_tt_l[10]
+
+uint16_tt ?= 24
+
+int8 int8_tt = 10
+int8 int8_tt_l[10]
+int16 int16_tt = 10
+int16 int16_tt_l[10]
+int32 int32_tt = 10
+int32 int32_tt_l[10]
+int64 int64_tt = 10
+int64 int64_tt_l[10]
+
+int64_tt_l[0] ?= 23

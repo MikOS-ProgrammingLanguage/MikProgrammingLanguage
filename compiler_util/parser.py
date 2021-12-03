@@ -8,7 +8,15 @@ TYPES = [
     "flt",
     "str",
     "char",
-    "cock"
+    "cock",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "int8",
+    "int16",
+    "int32",
+    "int64"
 ]
 INSTRUCTIONS = [
     "int",
@@ -24,7 +32,15 @@ INSTRUCTIONS = [
     "elif",
     "for",
     "while",
-    "cock"
+    "cock",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "int8",
+    "int16",
+    "int32",
+    "int64"
 ]
 
 # NODES
@@ -429,6 +445,7 @@ class Parser:
             left = BinOpNode(left, op_tok, right)   # left factor is now bin op
         
         return left
+    # needs types
     def __assign(self, type_, name_="", normal_decl=True):
         deref = False
         arr_len = ""
@@ -480,6 +497,10 @@ class Parser:
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value == "char":
                             node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value in TYPES and self.__current_token.value not in ("int", "flt", "str", "char", "cock"):
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value == "cock":
+                            node = self.__assign(self.__current_token.value)
                         elif self.__current_token.type_ == TT_COMMA:
                             self.__advance()
                             continue
@@ -499,6 +520,7 @@ class Parser:
             self.VARS.update({name:AsignmentNode(type_, pointer, name)})
             return AsignmentNode(type_, pointer, name)
 
+    # needs types
     def __call_or_refference(self):
         call = self.__current_token
         call_name = self.__current_token.value
@@ -584,6 +606,7 @@ class Parser:
             else:
                 NewError("RefferenceError", self.__current_token)
         return node
+    # needs types
     def __mikf(self):
         self.__advance()
         func_name = ""
@@ -651,6 +674,7 @@ class Parser:
                 return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
         else:
             NewError("Function is allready defined")
+    # needs types
     def __mikas(self):
         self.__advance()
         func_name = ""
@@ -709,6 +733,7 @@ class Parser:
             self.VARS = old_vars
             self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
             return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
+    # needs types
     def __struct(self, e_struct=False):
         typedef = False
         name = ""
@@ -984,6 +1009,7 @@ class Parser:
                 NewError("NoSemicolonFoundButExpected")
             return ForNode(cnt_init, bool_block, code_block)
 
+    # needs types
     def __mk_id(self):
         tok = self.__current_token
         if self.__func_on:
@@ -1001,9 +1027,21 @@ class Parser:
         elif tok.value == "cock":
             node = self.__assign(tok.value)
         elif tok.value == "uint8":
-            pass
+            node = self.__assign(tok.value)
         elif tok.value == "uint16":
-            pass
+            node = self.__assign(tok.value)
+        elif tok.value == "uint32":
+            node = self.__assign(tok.value)
+        elif tok.value == "uint64":
+            node = self.__assign(tok.value)
+        elif tok.value == "int8":
+            node = self.__assign(tok.value)
+        elif tok.value == "int16":
+            node = self.__assign(tok.value)
+        elif tok.value == "int32":
+            node = self.__assign(tok.value)
+        elif tok.value == "int64":
+            node = self.__assign(tok.value)
         elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
             node = self.__assign(tok.value)
         elif tok.value == "mikf":
