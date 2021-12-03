@@ -114,7 +114,7 @@ class Generator:
             code_ = ""
             if node.deref:
                 code_ += "&"
-            code_ += str(node.tok.value)
+            code_ += "\""+str(node.tok.value)+"\""
             return code_, self.is_n_main
         elif type(node) == CharNode:
             code_ = ""
@@ -232,9 +232,9 @@ class Generator:
         code_ = "char* "
         code_ += node.name
         if node.value != None:
-            code_ += f" {node.op} \""
+            code_ += f" {node.op} "
             code_ += str(self.__gen(node.value, True)[0])
-            code_ += "\";\n"
+            code_ += ";\n"
             return code_
         else:
             if self.is_in_arg_parse:
@@ -355,34 +355,33 @@ class Generator:
         code_ = "strcpy("
         code_ += node.name
         code_ += ","
-        code_ += "\""
         if node.value != None:
             code_ += str(self.__gen(node.value, True)[0])
-            code_ += "\");\n"
+            code_ += ");\n"
             return code_
         else:
             if self.is_in_arg_parse:
                 code_ += ""
             else:
                 code_ += ""
-            code_ += "\");\n"
+            code_ += ");\n"
             return code_
     def __generate_str_arr_reasgn(self, node):
         code_ = node.name
         code_ += "["
         code_ += str(self.__gen(node.idx)[0])
         code_ += "] = "
-        code_ += f"strcpy({code_.split(' = ')[0]}, \""
+        code_ += f"strcpy({code_.split(' = ')[0]}, "
         if node.value != None:
             code_ += str(self.__gen(node.value, True)[0])
-            code_ += "\");\n"
+            code_ += ");\n"
             return code_
         else:
             if self.is_in_arg_parse:
                 code_ += ""
             else:
                 code_ += ""
-            code_ += "\");\n"
+            code_ += ");\n"
         return code_
     def __generate_char_reasgn(self, node):
         #print("lol2")
@@ -432,6 +431,8 @@ class Generator:
     def __generate_func(self, node):
         self.is_n_main = True
         self.is_in_arg_parse = True
+        if node.ret_type == "str":
+            node.ret_type = "char* "
         func_str = f"{node.ret_type} {node.func_name} ("
         temp_args = []
         for i in node.arg_block.bool_bl_list:

@@ -560,6 +560,8 @@ class Parser:
                     elif self.__current_token.type_ == TT_COMMA:
                         self.__advance()
                         continue
+                    elif self.__current_token.value == "cock":
+                        node2 = self.__assign(self.__current_token.value)
                     else:
                         node2 = self.__mk_id()
                     new_block.append(node2)
@@ -612,6 +614,10 @@ class Parser:
                         elif tok.type_ == "COMMA":
                             self.__advance()
                             continue
+                        elif tok.value == "cock":
+                            node = self.__assign(tok.value)
+                        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
+                            node = self.__assign(tok.value)
                         else:
                             NewError("InvalidTypeError", f"You specified an invalid type in function decleration: {self.__current_token}")
                         bool_block_node.add_arg(node)
@@ -675,6 +681,10 @@ class Parser:
                         elif tok.type_ == "COMMA":
                             self.__advance()
                             continue
+                        elif tok.value == "cock":
+                            node = self.__assign(tok.value)
+                        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
+                            node = self.__assign(tok.value)
                         else:
                             NewError("InvalidTypeError", f"You specified an invalid type in function decleration: {self.__current_token}")
                         bool_block_node.add_arg(node)
@@ -722,6 +732,10 @@ class Parser:
                     elif tok.value == "str":
                         node = self.__assign(tok.value)
                     elif tok.value == "char":
+                        node = self.__assign(tok.value)
+                    elif tok.value == "cock":
+                        node = self.__assign(tok.value)
+                    elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                         node = self.__assign(tok.value)
                     else:
                         NewError("IllegalDeclarationError", f"Illegal decleration in struct at {self.__current_token.section} at line {self.__current_token.ln_count}")
@@ -986,7 +1000,11 @@ class Parser:
             node = self.__assign(tok.value)
         elif tok.value == "cock":
             node = self.__assign(tok.value)
-        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char"):
+        elif tok.value == "uint8":
+            pass
+        elif tok.value == "uint16":
+            pass
+        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
             node = self.__assign(tok.value)
         elif tok.value == "mikf":
             node = self.__mikf()

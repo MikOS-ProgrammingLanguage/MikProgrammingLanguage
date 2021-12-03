@@ -25,6 +25,13 @@ mikf add(int a, int b) -> int {
 	int c = a+b
 	return c
 }
+
+mikf return_nothing(str a, int b) -> str{
+	return a
+}
+
+str yeet = return_nothing("Hello, World!", 10)
+
 int array_int = array[0]
 
 int wtf = add(array_int, 20)
