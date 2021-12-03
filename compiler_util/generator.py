@@ -129,10 +129,10 @@ class Generator:
             return code_, self.is_in_arg_parse
         elif type(node) == StructNode:
             code_ = self.__generate_struct(node)
-            return code_, self.is_n_main
+            return code_, True
         elif type(node) == EstructNode:
             code_ = self.__generate_struct(node, True)
-            return code_, self.is_n_main
+            return code_, True
         elif type(node) == FunctionNode:
             code_ = self.__generate_func(node)
             return code_, True
@@ -425,7 +425,7 @@ class Generator:
         del temp_args[len(temp_args)-1]
         for i in temp_args:
             f_call_str += i
-        f_call_str += ")"
+        f_call_str += ");"
         return f_call_str
 
 
