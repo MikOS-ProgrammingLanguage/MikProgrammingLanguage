@@ -18,6 +18,7 @@ array[0] ?= 5
 Hello there fellow multi line cmnt
 */
 // success
+mikf max(int a, int b) -> int
 
 mikf add(int a, int b) -> int {
 	int c = a+b
@@ -26,11 +27,11 @@ mikf add(int a, int b) -> int {
 int array_int = array[0]
 
 int wtf = add(array_int, 20)
-mikas add_lol() -> int {
+/*mikas add_lol() -> int {
 	addq %rdi, %rsi
 	movq %rdi, %rax
 	ret
-}
+}*/
 int wohooo = 1
 
 str sdufhgfhghdf

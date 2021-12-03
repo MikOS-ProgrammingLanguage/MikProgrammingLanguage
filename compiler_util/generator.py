@@ -436,11 +436,14 @@ class Generator:
         for i in temp_args:
             func_str += i
         self.is_in_arg_parse = False
-        func_str += ") {\n"
-        for b in node.code_block.code_bl_list:
-            func_str += str(self.__gen(b)[0])
-        func_str += "}\n"
-        self.is_n_main = False
+        if node.func_decl:
+            func_str += ");\n"
+        else:
+            func_str += ") {\n"
+            for b in node.code_block.code_bl_list:
+                func_str += str(self.__gen(b)[0])
+            func_str += "}\n"
+            self.is_n_main = False
         return func_str
     def __generate_asm(self, node):
         self.is_n_main = True
@@ -535,12 +538,15 @@ class Generator:
     def __repr__(self) -> str:
         return "Why the fuck would you want to represent the code generator!"
 
-def generate(input_pth, output_pth):
+def generate(args):
+    input_pth = args.i
+    output_pth = args.o
+
     start = time.perf_counter()
-    with open(input_pth[1], "r") as f:
+    with open(input_pth, "r") as f:
         content = f.read()
         f.close()
-    preprocessed = preprocess(content, input_pth[1])
+    preprocessed = preprocess(content, input_pth)
     #print(preprocessed)
     lexed, sections = Lexer(preprocessed).lex()
     #print(lexed)
@@ -548,8 +554,8 @@ def generate(input_pth, output_pth):
     #print(parsed)
     #print(c_types)
     g = Generator(parsed, c_types).generate()
-    with open(output_pth[1]+".c", "w") as wf:
+    with open(output_pth+".c", "w") as wf:
         wf.write(g)
         wf.close()
     end = time.perf_counter()
-    NewInfo(f"File: {output_pth[1]}.c successfully created in {end-start} seconds")
+    NewInfo(f"File: {output_pth}.c successfully created in {end-start} seconds")

@@ -177,11 +177,12 @@ class ArrayRefference:
         return f"(array: {self.name}[{self.arr_len}])"
 
 class FunctionNode:
-    def __init__(self, function_name, return_type, arg_block: ArgBlockNode, code_block: CodeBlock) -> None:
+    def __init__(self, function_name, return_type, arg_block: ArgBlockNode, code_block: CodeBlock=CodeBlock(), func_decleration=False) -> None:
         self.func_name = function_name
         self.ret_type = return_type
         self.arg_block = arg_block
         self.code_block = code_block
+        self.func_decl = func_decleration
     
     def __repr__(self) -> str:
         return f"({self.func_name} ({self.arg_block}) -> {self.ret_type} {self.code_block})"
@@ -631,11 +632,13 @@ class Parser:
                         code_block = self.__check_and_make_type(code_block)
                     self.__advance()
                     self.__func_on = False
+                    func_decl = False
                 else:
-                    NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+                    code_block = CodeBlock()
+                    func_decl = True
             self.VARS = old_vars
-            self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block)})
-            return FunctionNode(func_name, ret_type, bool_block_node, code_block)
+            self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)})
+            return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
     def __mikas(self):
         self.__advance()
         func_name = ""
