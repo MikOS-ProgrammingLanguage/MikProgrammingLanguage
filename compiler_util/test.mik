@@ -8,22 +8,15 @@ struct stivale2_tag typedef {
     uint64 id
     uint64 next
 }
-mikas cast_to_stivale2_tag(uint64 addr) -> stivale2_tag* {
-    movq %rax, %rdi
-    ret
+
+// id: 0xc2b3f4c3233b0974
+struct stivale2_struct_tag_terminal typedef {
+    stivale2_tag header
+    uint32 flags
+    uint16 cols
+    uint16 rows
+    uint64 hello                      // Error
+    uint64 max_length
 }
+
 mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag*
-
-mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag* {
-    uint64 curr_tag = s->tags
-    stivale2_tag* curr_tag_ptr = cast_to_stivale2_tag(curr_tag)
-
-    while (curr_tag_ptr->id != 0) {
-        if (curr_tag_ptr->id == id) {
-            return curr_tag_ptr
-        }
-        curr_tag_ptr ?= cast_to_stivale2_tag(curr_tag_ptr->next)
-    }
-
-    return 0
-}

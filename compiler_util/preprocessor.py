@@ -73,12 +73,14 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True, mip_pth=Fals
                 content = file.read()
                 content = content.split("\n")
                 content2 = ""
-                for i in content:
-                    if (i.startswith("mikf") or i.startswith("const")) and i in text:
-                        content2 += (i+" owt")
-                    else:
-                        content2 += i
-                    content2 += "\n"
+                #for i in content:
+                #    if (i.startswith("mikf") or i.startswith("mikas")) and i in text:
+                #        content2 += (i+" owt")
+                #    else:
+                #        content2 += i
+                #    content2 += "\n"
+                content2 += i
+                content2 += "\n"
                 PKG_PREPROCESS_FLAG = True
                 PKG_NAME = fname
                 new_content = preprocess(content2, start_f=False)
