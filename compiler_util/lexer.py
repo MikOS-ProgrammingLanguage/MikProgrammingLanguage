@@ -161,6 +161,8 @@ class Lexer:
                             if self.__current_char == "/":
                                 self.__advance()
                                 break
+                        elif not self.__current_char:
+                            NewError("MultilineCommentNeverClosed", f"A multiline comment in {self.__sec.section} was started but never ended!")
                         self.__advance()
                 else:
                     tokens.append(Token(TT_DIV, self.__sec.section, self.__sec.ln_cnt, "/"))
