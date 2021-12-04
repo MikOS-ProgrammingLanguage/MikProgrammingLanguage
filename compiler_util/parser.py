@@ -501,7 +501,7 @@ class Parser:
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value == "cock":
                             node = self.__assign(self.__current_token.value)
-                        elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                        elif self.__current_token.value in ("uint8", "uint16", "uint32", "uint64"):
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
                             node = self.__assign(self.__current_token.value)
