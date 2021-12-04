@@ -1,5 +1,10 @@
 #yoink <test_f.milk>
 
-mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag* {
+mikf terminal_write(str s) {
 
+}
+
+mikf mikmain(stivale2_struct* s) {
+    str i = "YEEEEEEES"
+    terminal_write(i)
 }

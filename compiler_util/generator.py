@@ -460,20 +460,28 @@ class Generator:
                 code_ += ";\n"
             return code_
     def __generate_str_reasgn(self, node):
-        code_ = "strcpy("
-        code_ += node.name
-        code_ += ","
-        if node.value != None:
-            code_ += str(self.__gen(node.value, True)[0])
-            code_ += ");\n"
-            return code_
-        else:
-            if self.is_in_arg_parse:
-                code_ += ""
+        if self.is_in_arg_parse:
+            code_ = node.name
+            if node.value != None:
+                code_ += str(self.__gen(node.value, True)[0])
+                return code_
             else:
-                code_ += ""
-            code_ += ");\n"
-            return code_
+                return code_
+        else:
+            code_ = "strcpy("
+            code_ += node.name
+            code_ += ","
+            if node.value != None:
+                code_ += str(self.__gen(node.value, True)[0])
+                code_ += ");\n"
+                return code_
+            else:
+                if self.is_in_arg_parse:
+                    code_ += ""
+                else:
+                    code_ += ""
+                code_ += ");\n"
+                return code_
     def __generate_str_arr_reasgn(self, node):
         code_ = node.name
         code_ += "["
@@ -770,7 +778,7 @@ def generate(args):
     else:
         illegal_names = args.nCnfg.split(":")
     parsed, c_types = Parser(lexed, illegal_names=illegal_names).parse()
-    #print(parsed)
+    print(parsed)
     #print(c_types)
     g = Generator(parsed, c_types).generate()
     with open(output_pth+".c", "w") as wf:
