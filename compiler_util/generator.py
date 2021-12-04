@@ -190,8 +190,17 @@ class Generator:
         code = node.type_
         code += "* " if node.pointer else " "
         code += node.name
-        code += ";\n"
-        return code
+        if node.value != None:
+            code += f" {node.op} "
+            code += str(self.__gen(node.value)[0])
+            code += ";\n" if not self.is_in_arg_parse else " "
+            return code
+        else:
+            if self.is_in_arg_parse:
+                code += ""
+            else:
+                code += ";\n"
+            return code
     def __generate_custom_type_arr(self, node):
         code = (node.type_).split("_arr")[0]
         code += "* " if node.pointer else " "
