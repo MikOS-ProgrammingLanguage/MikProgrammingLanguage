@@ -327,7 +327,7 @@ class Generator:
             if self.is_in_arg_parse:
                 code_ += ""
             else:
-                code_ += "';\n"
+                code_ += ";\n"
             return code_
     def __generate_char_arr_asgn(self, node):
         code_ = "char"
@@ -501,9 +501,9 @@ class Generator:
             return code_
         else:
             if self.is_in_arg_parse:
-                code_ += "'"
+                code_ += ""
             else:
-                code_ += "';\n"
+                code_ += ";\n"
             return code_
     def __generate_char_arr_reasgn(self, node):
         code_ = node.name
