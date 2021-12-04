@@ -25,7 +25,9 @@ mikf add(int a, int b) -> int* {
 	int c = a+b
 	return c
 }
-
+mikas add2(int lol, int lol2) -> int * {
+	
+}
 mikf return_nothing(str a, int b) -> int {
 	return b
 }

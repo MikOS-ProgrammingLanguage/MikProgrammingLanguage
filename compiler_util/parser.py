@@ -757,6 +757,9 @@ class Parser:
                     if self.__current_token.value in TYPES:
                         ret_type = self.__current_token.value
                         self.__advance()
+                        if self.__current_token.type_ == TT_MUL:
+                            ret_type += "* "
+                            self.__advance()
                     else:
                         NewError("NoReturnTypeFoundError", "There was a return type expected but not found")
                 else:
