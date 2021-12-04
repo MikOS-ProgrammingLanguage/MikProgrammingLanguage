@@ -25,7 +25,7 @@ mikf add(int a, int b) -> int* {
 	int c = a+b
 	return c
 }
-mikas add2(int lol, int lol2) -> int * {
+mikas add2(int lol, int lol2) -> uint64 {
 	
 }
 mikf return_nothing(str a, int b) -> int {
@@ -85,7 +85,7 @@ if (test_struct.inside_struct == 20) {
 
 }
 elif (test_struct.inside_struct == 20) {
-	
+
 }
 
 // estructs
@@ -118,3 +118,11 @@ int64 int64_tt = 10
 int64 int64_tt_l[10]
 
 int64_tt_l[0] ?= 23
+
+
+/*while (curr_tag_ptr->id != 0) {
+    if (curr_tag_ptr->id == id) {
+        return curr_tag_ptr
+    }
+    curr_tag_ptr ?= cast_to_stivale2_tag(curr_tag_ptr->next)
+}*/

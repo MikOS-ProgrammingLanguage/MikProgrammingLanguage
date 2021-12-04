@@ -511,7 +511,7 @@ class Parser:
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value == "char":
                             node = self.__assign(self.__current_token.value)
-                        elif self.__current_token.value in TYPES and self.__current_token.value not in ("int", "flt", "str", "char", "cock"):
+                        elif self.__current_token.value in CUSTOM_TYPES:
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value == "cock":
                             node = self.__assign(self.__current_token.value)
@@ -526,9 +526,11 @@ class Parser:
                             node = self.__mk_id()
                         new_block.append(node)
                     self.__advance()
+                    #print(self.__current_token)
                     if len_args != len(new_block):
-                        NewError("ParameterExpectedError", f"{len_args} args were expected but {len(new_block)} args were found!", f"-> Section {new_block[0].tok.section} at Line {new_block[0].tok.ln_count}")
+                        NewError("ParameterExpectedError", f"{len_args} args were expected but {len(new_block)} args were found!")
                     else:
+                        self.VARS.update({name:AsignmentNode(type_, pointer, name, asgn_op, FunctionCall(f_name, new_block))})
                         return AsignmentNode(type_, pointer, name, asgn_op, FunctionCall(f_name, new_block))
             else:
                 value = self.__expr()
@@ -555,12 +557,12 @@ class Parser:
             self.__advance()
             call_name = self.__current_token.value
             old_c_name += call_name
-        #print(call_name)
         #print(self.VARS)
 
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
         elif call_name in self.VARS and call_name != "return":
+            #print(self.__current_token)
             if self.VARS.get(call_name).type_.endswith("_arr"):
                 prev_arr_len = self.VARS.get(call_name).value
                 self.__advance()
@@ -587,6 +589,7 @@ class Parser:
                 node = ReAsignementNode(temp_node.type_, temp_node.pointer, old_c_name, temp_node.op, temp_node.value)
         else:
             self.__advance()
+            #print(self.__current_token)
             if self.__current_token.type_ == TT_LPAREN and call_name in self.FUNCTIONS:
                 value = self.FUNCTIONS.get(call_name)
                 len_args = len(value.arg_block.bool_bl_list)
@@ -622,17 +625,15 @@ class Parser:
                 self.__advance()
             elif call.value == "return":
                 node = ReturnNode(self.__factor())
-            elif self.__current_token.type_ not in (TT_LPAREN, TT_ASSGN, TT_REASGN, TT_EOF, TT_LCURL, TT_RCURL, TT_INT, TT_COMMA, TT_FLOAT, TT_STRING, TT_CHAR):
-                if self.__current_token.value in self.VARS:
+            elif self.__current_token.type_ == TT_ID and self.__current_token.value in self.VARS:
                     #inf = self.VARS.get(self.__current_token.value)
                     #inf = inf.value
                     #node = ReferenceNode(inf)
-                    node = IDNode(self.__current_token.value, self.__current_token.value)
-                else:
-                    NewError("VarOrFunctionNotFound", f"The var name refferenced is not defined: {self.__current_token}")
-                self.__advance()
+                lol = self.__struct_get()
+                node = IDNode(lol, lol)
             else:
-                NewError("RefferenceError", self.__current_token)
+                node = IDNode(old_c_name, old_c_name)
+                #NewError("RefferenceError", self.__current_token)
         return node
     # needs types
     def __mikf(self):
@@ -681,6 +682,8 @@ class Parser:
                     self.__advance()
                     if self.__current_token.value in TYPES:
                         ret_type = self.__current_token.value
+                        if ret_type in ("uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64"):
+                            ret_type += "_t"
                         self.__advance()
                         if self.__current_token.type_ == TT_MUL:
                             ret_type += "* "
@@ -756,6 +759,8 @@ class Parser:
                     self.__advance()
                     if self.__current_token.value in TYPES:
                         ret_type = self.__current_token.value
+                        if ret_type in ("uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64"):
+                            ret_type += "_t"
                         self.__advance()
                         if self.__current_token.type_ == TT_MUL:
                             ret_type += "* "
@@ -971,39 +976,51 @@ class Parser:
             while self.__current_token != None:
                 tok = self.__current_token
                 if tok.type_ in (TT_INT, TT_FLOAT):
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(tok.value)
+                    self.__advance()
                 elif tok.type_ == TT_STRING:
                     bool_block.bool_statement += f"\"{tok.value}\""
+                    self.__advance()
                 elif tok.type_ == TT_CHAR:
                     bool_block.bool_statement += f"'{tok.value}'"
+                    self.__advance()
                 elif tok.type_ == TT_ID and tok.value in self.VARS:
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(self.__expr())
                 elif tok.type_ == TT_KAND:
                     bool_block.bool_statement += "&"
+                    self.__advance()
                 elif tok.type_ == TT_NOT:
                     bool_block.bool_statement += " !"
+                    self.__advance()
                 elif tok.type_ == TT_EQ:
                     bool_block.bool_statement += " == "
+                    self.__advance()
                 elif tok.type_ == TT_NEQ:
                     bool_block.bool_statement += " != "
+                    self.__advance()
                 elif tok.type_ == TT_LTHEN:
                     bool_block.bool_statement += " < "
+                    self.__advance()
                 elif tok.type_ == TT_GTHEN:
                     bool_block.bool_statement += " > "
+                    self.__advance()
                 elif tok.type_ == TT_LEQ:
                     bool_block.bool_statement += " <= "
+                    self.__advance()
                 elif tok.type_ == TT_GEQ:
                     bool_block.bool_statement += " >= "
+                    self.__advance()
                 elif tok.type_ == TT_AND:
                     bool_block.bool_statement += " && "
+                    self.__advance()
                 elif tok.type_ == TT_OR:
                     bool_block.bool_statement += " || "
+                    self.__advance()
                 elif tok.type_ == TT_RPAREN:
                     self.__advance()
                     break
                 else:
                     NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
-                self.__advance()
             
             if self.__current_token.type_ == TT_LCURL:
                 code_block = CodeBlock()
@@ -1034,39 +1051,51 @@ class Parser:
                 while self.__current_token.type_ != TT_EOF:
                     tok = self.__current_token
                     if tok.type_ in (TT_INT, TT_FLOAT):
-                        bool_block.bool_statement += f"{tok.value}"
+                        bool_block.bool_statement += str(tok.value)
+                        self.__advance()
                     elif tok.type_ == TT_STRING:
                         bool_block.bool_statement += f"\"{tok.value}\""
+                        self.__advance()
                     elif tok.type_ == TT_CHAR:
                         bool_block.bool_statement += f"'{tok.value}'"
+                        self.__advance()
                     elif tok.type_ == TT_ID and tok.value in self.VARS:
-                        bool_block.bool_statement += f"{tok.value}"
+                        bool_block.bool_statement += str(self.__expr())
                     elif tok.type_ == TT_KAND:
                         bool_block.bool_statement += "&"
+                        self.__advance()
                     elif tok.type_ == TT_NOT:
                         bool_block.bool_statement += " !"
+                        self.__advance()
                     elif tok.type_ == TT_EQ:
                         bool_block.bool_statement += " == "
+                        self.__advance()
                     elif tok.type_ == TT_NEQ:
                         bool_block.bool_statement += " != "
+                        self.__advance()
                     elif tok.type_ == TT_LTHEN:
                         bool_block.bool_statement += " < "
+                        self.__advance()
                     elif tok.type_ == TT_GTHEN:
                         bool_block.bool_statement += " > "
+                        self.__advance()
                     elif tok.type_ == TT_LEQ:
                         bool_block.bool_statement += " <= "
+                        self.__advance()
                     elif tok.type_ == TT_GEQ:
                         bool_block.bool_statement += " >= "
+                        self.__advance()
                     elif tok.type_ == TT_AND:
                         bool_block.bool_statement += " && "
+                        self.__advance()
                     elif tok.type_ == TT_OR:
                         bool_block.bool_statement += " || "
+                        self.__advance()
                     elif tok.type_ == TT_RPAREN:
                         self.__advance()
                         break
                     else:
                         NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
-                    self.__advance()
                 if self.__current_token.type_ == TT_LCURL:
                     code_block = CodeBlock()
                     self.__advance()
@@ -1112,7 +1141,7 @@ class Parser:
             node = self.__assign(tok.value)
         elif tok.value == "int64":
             node = self.__assign(tok.value)
-        elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
+        elif tok.value in CUSTOM_TYPES:
             node = self.__assign(tok.value)
         elif tok.value == "mikf":
             node = self.__mikf()

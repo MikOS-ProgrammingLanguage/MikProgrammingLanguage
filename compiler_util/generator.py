@@ -101,6 +101,10 @@ class Generator:
                 code_ = self.__generate_uint_arr_reasgn(node)
             elif (node.type_).startswith("int") and node.type_.endswith("_arr_re"):
                 code_ = self.__generate_int_num_arr_reasgn(node)
+            elif node.type_ in self.custom_types:
+                code_ = self.__generate_custom_type_re(node)
+            elif node.type_ in self.custom_types_arr:
+                code_ = self.__generate_custom_type_re_arr(node)
             else:
                 NewError("well wtf", node)
             return code_, self.is_n_main
@@ -142,7 +146,7 @@ class Generator:
             code_ += "'"
             return code_, self.is_n_main
         elif type(node) == ReturnNode:
-            code_ = "return "+node.tok.tok + ";\n"
+            code_ = "return "+ str(self.__gen(node.tok)[0]) +";\n"
             return code_, self.is_in_arg_parse
         elif type(node) == StructNode:
             code_ = self.__generate_struct(node)
@@ -201,6 +205,19 @@ class Generator:
             else:
                 code += ";\n"
             return code
+    def __generate_custom_type_re(self, node):
+        code_ = node.name
+        if node.value != None:
+            code_ += f" {node.op} "
+            code_ += str(self.__gen(node.value)[0])
+            code_ += ";\n"
+            return code_
+        else:
+            if self.is_in_arg_parse:
+                code_ += ""
+            else:
+                code_ += ";\n"
+            return code_
     def __generate_custom_type_arr(self, node):
         code = (node.type_).split("_arr")[0]
         code += "* " if node.pointer else " "
@@ -209,6 +226,21 @@ class Generator:
         code += str(self.__gen(node.value)[0])
         code += "];\n"
         return code
+    def __generate_custom_type_re_arr(self, node):
+            code_ = node.name
+            code_ += "["
+            code_ += str(self.__gen(node.idx)[0])
+            code_ += "] = "
+            if node.value != None:
+                code_ += str(self.__gen(node.value)[0])
+                code_ += ";\n"
+                return code_
+            else:
+                if self.is_in_arg_parse:
+                    code_ += ""
+                else:
+                    code_ += ";\n"
+                return code_
 
     def __generate_int_asgn(self, node):
         code_ = "int"
