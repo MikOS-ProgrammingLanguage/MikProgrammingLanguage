@@ -151,7 +151,7 @@ class Lexer:
             elif self.__current_char == "/":
                 self.__advance()
                 if self.__current_char == "/":
-                    while self.__current_char != "\n":
+                    while self.__current_char != "\n" and self.__current_char != None:
                         self.__advance()
                 elif self.__current_char == "*":
                     self.__advance()
