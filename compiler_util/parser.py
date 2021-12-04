@@ -833,39 +833,51 @@ class Parser:
             while self.__current_token != None:
                 tok = self.__current_token
                 if tok.type_ in (TT_INT, TT_FLOAT):
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(tok.value)
+                    self.__advance()
                 elif tok.type_ == TT_STRING:
                     bool_block.bool_statement += f"\"{tok.value}\""
+                    self.__advance()
                 elif tok.type_ == TT_CHAR:
                     bool_block.bool_statement += f"'{tok.value}'"
+                    self.__advance()
                 elif tok.type_ == TT_ID and tok.value in self.VARS:
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(self.__expr())
                 elif tok.type_ == TT_KAND:
                     bool_block.bool_statement += "&"
+                    self.__advance()
                 elif tok.type_ == TT_NOT:
                     bool_block.bool_statement += " !"
+                    self.__advance()
                 elif tok.type_ == TT_EQ:
                     bool_block.bool_statement += " == "
+                    self.__advance()
                 elif tok.type_ == TT_NEQ:
                     bool_block.bool_statement += " != "
+                    self.__advance()
                 elif tok.type_ == TT_LTHEN:
                     bool_block.bool_statement += " < "
+                    self.__advance()
                 elif tok.type_ == TT_GTHEN:
                     bool_block.bool_statement += " > "
+                    self.__advance()
                 elif tok.type_ == TT_LEQ:
                     bool_block.bool_statement += " <= "
+                    self.__advance()
                 elif tok.type_ == TT_GEQ:
                     bool_block.bool_statement += " >= "
+                    self.__advance()
                 elif tok.type_ == TT_AND:
                     bool_block.bool_statement += " && "
+                    self.__advance()
                 elif tok.type_ == TT_OR:
                     bool_block.bool_statement += " || "
+                    self.__advance()
                 elif tok.type_ == TT_RPAREN:
                     self.__advance()
                     break
                 else:
                     NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
-                self.__advance()
             
             if self.__current_token.type_ == TT_LCURL:
                 code_block = CodeBlock()
@@ -895,39 +907,51 @@ class Parser:
             while self.__current_token != None:
                 tok = self.__current_token
                 if tok.type_ in (TT_INT, TT_FLOAT):
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(tok.value)
+                    self.__advance()
                 elif tok.type_ == TT_STRING:
                     bool_block.bool_statement += f"\"{tok.value}\""
+                    self.__advance()
                 elif tok.type_ == TT_CHAR:
                     bool_block.bool_statement += f"'{tok.value}'"
+                    self.__advance()
                 elif tok.type_ == TT_ID and tok.value in self.VARS:
-                    bool_block.bool_statement += f"{tok.value}"
+                    bool_block.bool_statement += str(self.__expr())
                 elif tok.type_ == TT_KAND:
                     bool_block.bool_statement += "&"
+                    self.__advance()
                 elif tok.type_ == TT_NOT:
                     bool_block.bool_statement += " !"
+                    self.__advance()
                 elif tok.type_ == TT_EQ:
                     bool_block.bool_statement += " == "
+                    self.__advance()
                 elif tok.type_ == TT_NEQ:
                     bool_block.bool_statement += " != "
+                    self.__advance()
                 elif tok.type_ == TT_LTHEN:
                     bool_block.bool_statement += " < "
+                    self.__advance()
                 elif tok.type_ == TT_GTHEN:
                     bool_block.bool_statement += " > "
+                    self.__advance()
                 elif tok.type_ == TT_LEQ:
                     bool_block.bool_statement += " <= "
+                    self.__advance()
                 elif tok.type_ == TT_GEQ:
                     bool_block.bool_statement += " >= "
+                    self.__advance()
                 elif tok.type_ == TT_AND:
                     bool_block.bool_statement += " && "
+                    self.__advance()
                 elif tok.type_ == TT_OR:
                     bool_block.bool_statement += " || "
+                    self.__advance()
                 elif tok.type_ == TT_RPAREN:
                     self.__advance()
                     break
                 else:
                     NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
-                self.__advance()
             
             if self.__current_token.type_ == TT_LCURL:
                 code_block = CodeBlock()

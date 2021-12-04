@@ -81,6 +81,13 @@ test_struct.inside_struct2 ?= 100
 
 int struct_type_refference = test_struct.inside_struct
 
+if (test_struct.inside_struct == 20) {
+
+}
+elif (test_struct.inside_struct == 20) {
+	
+}
+
 // estructs
 estruct test_estruct typedef {
 	int test_estruct_var
