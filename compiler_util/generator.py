@@ -17,6 +17,7 @@ class Generator:
         self.is_in_arg_parse = False
         self.custom_types = custom_types
         self.custom_types_arr = []
+        self.asgn = False
         for i in self.custom_types:
             self.custom_types_arr.append(i+"_arr")
 
@@ -37,6 +38,7 @@ class Generator:
     def __gen(self, node, ign_bin_op=False):
         code_ = None
         if type(node) == AsignmentNode:
+            self.asgn = True
             if node.type_ == "int":
                 code_ = self.__generate_int_asgn(node)
             elif node.type_ == "int_arr":
@@ -71,8 +73,10 @@ class Generator:
                 code_ = self.__generate_custom_type_arr(node)
             else:
                 NewError("well wtf")
+            self.asgn = False
             return code_, self.is_n_main
         elif type(node) == ReAsignementNode:
+            self.asgn = True
             if node.type_ == "int":
                 code_ = self.__generate_int_reasgn(node)
             elif str(node.type_).startswith("int_arr_re"):
@@ -107,6 +111,7 @@ class Generator:
                 code_ = self.__generate_custom_type_re_arr(node)
             else:
                 NewError("well wtf", node)
+            self.asgn = False
             return code_, self.is_n_main
         elif type(node) == BinOpNode:
             if ign_bin_op:
@@ -293,6 +298,7 @@ class Generator:
             code_ += f" {node.op} "
             code_ += str(self.__gen(node.value, True)[0])
             code_ += ";\n"
+            self.asgn = False
             return code_
         else:
             if self.is_in_arg_parse:
@@ -610,7 +616,10 @@ class Generator:
         del temp_args[len(temp_args)-1]
         for i in temp_args:
             f_call_str += i
-        f_call_str += ");"
+        if self.asgn:
+            f_call_str += ")"
+        else:
+            f_call_str += ");"
         return f_call_str
 
 
@@ -629,15 +638,16 @@ class Generator:
         for i in temp_args:
             func_str += i
         self.is_in_arg_parse = False
-        if node.func_decl:
+        if node.func_decl == True:
             func_str += ");\n"
+            return func_str
         else:
             func_str += ") {\n"
             for b in node.code_block.code_bl_list:
                 func_str += str(self.__gen(b)[0])
             func_str += "}\n"
             self.is_n_main = False
-        return func_str
+            return func_str
     def __generate_asm(self, node):
         self.is_n_main = True
         self.is_in_arg_parse = True

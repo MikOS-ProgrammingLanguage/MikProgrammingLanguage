@@ -670,7 +670,7 @@ class Parser:
                             node = self.__assign(tok.value)
                         elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                             node = self.__assign(tok.value)
-                        elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                        elif self.__current_token.value in ("uint8", "uint16", "uint32", "uint64"):
                             node = self.__assign(self.__current_token.value)
                         elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
                             node = self.__assign(self.__current_token.value)
@@ -708,7 +708,7 @@ class Parser:
             if func_name in self.__ilegal_names and not func_decl:
                 NewError("Function is allready defined in another file.")
             else:
-                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)})
+                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)}) if not func_decl else None
                 return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
         else:
             NewError("Function is allready defined")

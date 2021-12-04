@@ -1,4 +1,29 @@
-int i = 10
-if (i == 10) {
-    int b = 20
+struct stivale2_struct typedef {
+    char bootloader_brand[64]
+    char bootloader_version[64]
+    uint64 tags
+}
+
+struct stivale2_tag typedef {
+    uint64 id
+    uint64 next
+}
+mikas cast_to_stivale2_tag(uint64 addr) -> stivale2_tag* {
+    movq %rax, %rdi
+    ret
+}
+mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag*
+
+mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag* {
+    uint64 curr_tag = s->tags
+    stivale2_tag* curr_tag_ptr = cast_to_stivale2_tag(curr_tag)
+
+    while (curr_tag_ptr->id != 0) {
+        if (curr_tag_ptr->id == id) {
+            return curr_tag_ptr
+        }
+        curr_tag_ptr ?= cast_to_stivale2_tag(curr_tag_ptr->next)
+    }
+
+    return 0
 }
