@@ -588,6 +588,10 @@ class Parser:
                         continue
                     elif self.__current_token.value == "cock":
                         node2 = self.__assign(self.__current_token.value)
+                    elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                        node = self.__assign(self.__current_token.value)
+                    elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
+                        node = self.__assign(self.__current_token.value)
                     else:
                         node2 = self.__mk_id()
                     new_block.append(node2)
@@ -645,6 +649,10 @@ class Parser:
                             node = self.__assign(tok.value)
                         elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                             node = self.__assign(tok.value)
+                        elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
+                            node = self.__assign(self.__current_token.value)
                         else:
                             NewError("InvalidTypeError", f"You specified an invalid type in function decleration: {self.__current_token}")
                         bool_block_node.add_arg(node)
@@ -713,6 +721,10 @@ class Parser:
                             node = self.__assign(tok.value)
                         elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                             node = self.__assign(tok.value)
+                        elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                            node = self.__assign(self.__current_token.value)
+                        elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
+                            node = self.__assign(self.__current_token.value)
                         else:
                             NewError("InvalidTypeError", f"You specified an invalid type in function decleration: {self.__current_token}")
                         bool_block_node.add_arg(node)
@@ -766,6 +778,10 @@ class Parser:
                         node = self.__assign(tok.value)
                     elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                         node = self.__assign(tok.value)
+                    elif self.__current_token.valu in ("uint8", "uint16", "uint32", "uint64"):
+                        node = self.__assign(self.__current_token.value)
+                    elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
+                        node = self.__assign(self.__current_token.value)
                     else:
                         NewError("IllegalDeclarationError", f"Illegal decleration in struct at {self.__current_token.section} at line {self.__current_token.ln_count}")
                     code_block.add_arg(node)
