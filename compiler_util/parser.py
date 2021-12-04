@@ -365,6 +365,13 @@ class Parser:
             self.__advance()
             temp_name.value += self.__current_token.value
             return temp_name
+        elif self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+            temp_name = self.__current_token
+            self.__advance()
+            temp_name.value += "->"
+            self.__advance()
+            temp_name.value += self.__current_token.value
+            return temp_name
         else:
             return self.__current_token
 
@@ -386,6 +393,13 @@ class Parser:
                         temp_name = self.__current_token.value
                         self.__advance()
                         temp_name += "."
+                        self.__advance()
+                        temp_name += self.__current_token.value
+                        return UnaryOpNode("-", temp_name)
+                    elif self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                        temp_name = self.__current_token.value
+                        self.__advance()
+                        temp_name += "->"
                         self.__advance()
                         temp_name += self.__current_token.value
                         return UnaryOpNode("-", temp_name)
@@ -535,6 +549,12 @@ class Parser:
             self.__advance()
             call_name = self.__current_token.value
             old_c_name += call_name
+        elif self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+            self.__advance()
+            old_c_name = call_name + "->"
+            self.__advance()
+            call_name = self.__current_token.value
+            old_c_name += call_name
         #print(call_name)
         #print(self.VARS)
 
@@ -662,6 +682,9 @@ class Parser:
                     if self.__current_token.value in TYPES:
                         ret_type = self.__current_token.value
                         self.__advance()
+                        if self.__current_token.type_ == TT_MUL:
+                            ret_type += "* "
+                            self.__advance()
                     else:
                         NewError("NoReturnTypeFoundError", "There was a return type expected but not found")
                 else:

@@ -21,13 +21,13 @@ Hello there fellow multi line cmnt
 @secend
 mikf max(int a, int b) -> int
 
-mikf add(int a, int b) -> int {
+mikf add(int a, int b) -> int* {
 	int c = a+b
 	return c
 }
 
-mikf return_nothing(str a, int b) -> str{
-	return a
+mikf return_nothing(str a, int b) -> int {
+	return b
 }
 
 str yeet = return_nothing("Hello, World!", 10)
