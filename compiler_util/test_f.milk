@@ -1,3 +1,26 @@
-mikf add() {
-    int asdf = 10
+struct stivale2_struct typedef {
+    char bootloader_brand[64]
+    char bootloader_version[64]
+    uint64 tags
 }
+
+struct stivale2_tag typedef {
+    uint64 id
+    uint64 next
+}
+
+// id: 0xc2b3f4c3233b0974
+struct stivale2_struct_tag_terminal typedef {
+    stivale2_tag header
+    uint32 flags
+    uint16 cols
+    uint16 rows
+    uint64 hello                      // Error
+    uint64 max_length
+}
+
+mikf find_tag(stivale2_struct* s, uint64 id) -> stivale2_tag*
+
+
+
+
