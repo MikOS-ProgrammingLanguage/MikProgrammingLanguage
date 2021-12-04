@@ -778,7 +778,7 @@ def generate(args):
     else:
         illegal_names = args.nCnfg.split(":")
     parsed, c_types = Parser(lexed, illegal_names=illegal_names).parse()
-    print(parsed)
+    #print(parsed)
     #print(c_types)
     g = Generator(parsed, c_types).generate()
     with open(output_pth+".c", "w") as wf:
