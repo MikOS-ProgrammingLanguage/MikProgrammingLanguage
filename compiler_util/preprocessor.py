@@ -48,7 +48,7 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True, mip_pth=Fals
                 fname = mip_src_path+"/"+PKG_NAME+"/"+fname
             if fname in yoinked_files:
                 continue
-            with open(w_dir+"/"+fname, "r")as file:
+            with open(w_dir+fname, "r")as file:
                 new_text += f"@section(\"{fname}\")\n"
                 content = file.read()
                 content = content.split("\n")

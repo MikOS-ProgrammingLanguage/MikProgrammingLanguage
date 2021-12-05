@@ -55,6 +55,10 @@ class RootNode:
     def __repr__(self) -> str:
         return f"{self.nodes}"
 
+class StructRefferenceNode:
+    def __init__(self, struct_ref) -> None:
+        self.struct_ref = struct_ref
+
 class NumberNode:
     def __init__(self, tok) -> None:
         self.tok = tok
@@ -92,7 +96,7 @@ class IDNode:
         self.deref = False
     
     def __repr__(self) -> str:
-        return f"{self.tok}"
+        return f"ID {self.tok}"
 
 class BoolNode:
     def __init__(self) -> None:
@@ -295,6 +299,7 @@ class Parser:
         return self.__tokens[pos_now+num] if pos_now+num < len(self.__tokens) else None
 
     def __check_and_make_type(self, node:CodeBlock):
+        #print(self.__current_token)
         if self.__current_token.type_ in (TT_INT, TT_FLOAT):
             res = self.__expr() # gets tree for mathematical expr
             node.add_arg(res)
@@ -358,22 +363,25 @@ class Parser:
         return self.__programm_node, CUSTOM_TYPES
 
     def __struct_get(self):
+        temp_name = self.__current_token
+        struct_ref = False
         if self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
-            temp_name = self.__current_token
             self.__advance()
-            temp_name.value += "."
-            self.__advance()
-            temp_name.value += self.__current_token.value
-            return temp_name
+            while self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                temp_name.value += self.__current_token.value
+                self.__advance()
+                temp_name.value += "."
+                self.__advance()
+                temp_name.value += self.__current_token.value
         elif self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
-            temp_name = self.__current_token
             self.__advance()
-            temp_name.value += "->"
-            self.__advance()
-            temp_name.value += self.__current_token.value
-            return temp_name
-        else:
-            return self.__current_token
+            while self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                temp_name.value += self.__current_token.value
+                self.__advance()
+                temp_name.value += "->"
+                self.__advance()
+                temp_name.value += self.__current_token.value
+        return temp_name
 
     def __factor(self):
         tok = self.__current_token
@@ -433,9 +441,10 @@ class Parser:
                 tok2 = self.FUNCTIONS.get(tok.value)
                 tok2 = tok.value
             else:
-                NewError("RefferencedBeforeAssignement", f"The variable '{tok.value}' is refferenced but not assigned!")
+                NewError("RefferencedBeforeAssignement", f"The variable '{tok.value}' at {tok.section} ln {tok.ln_count} is refferenced but not assigned!")
             self.__advance()
-            node = IDNode(tok.value, tok2)
+            #print(tok2)
+            node = IDNode(tok2, tok2)
             node.deref = deref
             return node
         elif tok.type_ in (TT_STRING): 
@@ -460,7 +469,7 @@ class Parser:
         
         return left
     # needs types
-    def __assign(self, type_, name_="", normal_decl=True):
+    def __assign(self, type_, name_="", normal_decl=True, struct_decl=[False, ""]):
         deref = False
         arr_len = ""
         self.__advance()
@@ -471,8 +480,10 @@ class Parser:
             pointer = False
         if self.__current_token.type_ == TT_ID:
             name = self.__current_token.value
+            if struct_decl[0]:
+                name = struct_decl[1] + name
             if name in self.VARS and self.__get_token(1).type_ != TT_REASGN:
-                NewError("VariableNameDuplicate", f"The variable: {name} is already defined!", self.__current_token.ln_count)
+                NewError("VariableNameDuplicate", f"The variable: {name} is already defined!", f"at {self.__current_token.section} at ln {self.__current_token.ln_count}")
             self.__advance()
             # should be = now
         elif name_ != "":
@@ -546,23 +557,25 @@ class Parser:
         call_name = self.__current_token.value
         old_c_name = call_name
         if self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
-            self.__advance()
-            old_c_name = call_name + "."
-            self.__advance()
-            call_name = self.__current_token.value
-            old_c_name += call_name
+            while self.__get_token(1).type_ == TT_DOT and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                self.__advance()
+                old_c_name = call_name + "."
+                self.__advance()
+                call_name = self.__current_token.value
+                old_c_name += call_name
         elif self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
-            self.__advance()
-            old_c_name = call_name + "->"
-            self.__advance()
-            call_name = self.__current_token.value
-            old_c_name += call_name
+            while self.__get_token(1).type_ == TT_ARROW and self.__get_token(2).type_ == TT_ID and (self.__get_token(2).value not in TYPES and self.__get_token(2).value not in INSTRUCTIONS and self.__get_token(2).value not in CUSTOM_TYPES):
+                self.__advance()
+                old_c_name = call_name + "->"
+                self.__advance()
+                call_name = self.__current_token.value
+                old_c_name += call_name
         #print(self.VARS)
 
         if call.type_ in (TT_INT, TT_FLOAT, TT_STRING, TT_CHAR):
             node = self.__factor()
         elif call_name in self.VARS and call_name != "return":
-            #print(self.__current_token)
+            print(self.__current_token)
             if self.VARS.get(call_name).type_.endswith("_arr"):
                 prev_arr_len = self.VARS.get(call_name).value
                 self.__advance()
@@ -629,7 +642,7 @@ class Parser:
                     #inf = self.VARS.get(self.__current_token.value)
                     #inf = inf.value
                     #node = ReferenceNode(inf)
-                lol = self.__struct_get()
+                lol= self.__struct_get()
                 node = IDNode(lol, lol)
             else:
                 node = IDNode(old_c_name, old_c_name)
@@ -639,7 +652,12 @@ class Parser:
     def __mikf(self):
         self.__advance()
         func_name = ""
-        if self.__current_token.type_ == "ID" and self.__current_token.value not in self.VARS and self.__current_token.value not in self.FUNCTIONS and self.__current_token.value not in INSTRUCTIONS:
+        if self.__current_token.type_ == "ID" and self.__current_token.value not in self.VARS and self.__current_token.value not in INSTRUCTIONS:
+            if self.__current_token.value in self.FUNCTIONS:
+                if (self.FUNCTIONS.get(self.__current_token.value)).func_decl:
+                    pass
+                else:
+                    NewError("Function is allready defined")
             func_name = self.__current_token.value
             ret_type = ""
             self.__advance()
@@ -708,7 +726,7 @@ class Parser:
             if func_name in self.__ilegal_names and not func_decl:
                 NewError("Function is allready defined in another file.")
             else:
-                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)}) if not func_decl else None
+                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)})
                 return FunctionNode(func_name, ret_type, bool_block_node, code_block, func_decl)
         else:
             NewError("Function is allready defined")
@@ -716,7 +734,12 @@ class Parser:
     def __mikas(self):
         self.__advance()
         func_name = ""
-        if self.__current_token.type_ == "ID" and self.__current_token.value not in self.VARS and self.__current_token.value not in self.FUNCTIONS and self.__current_token.value not in INSTRUCTIONS:
+        if self.__current_token.type_ == "ID" and self.__current_token.value not in self.VARS and self.__current_token.value not in INSTRUCTIONS:
+            if self.__current_token.value in self.FUNCTIONS:
+                if (self.FUNCTIONS.get(self.__current_token.value)).func_decl:
+                    pass
+                else:
+                    NewError("Function is allready defined")
             func_name = self.__current_token.value
             ret_type = ""
             self.__advance()
@@ -775,11 +798,17 @@ class Parser:
                     asm_code = self.__current_token.value
                     self.__advance()
                     self.__func_on = False
+                    func_decl = False
                 else:
-                    NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
+                    code_block = CodeBlock()
+                    func_decl = True
+                    #NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
             self.VARS = old_vars
-            self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
-            return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
+            if func_name in self.__ilegal_names and not func_decl:
+                NewError("Function is allready defined in another file.")
+            else:
+                self.FUNCTIONS.update({f"{func_name}":FunctionNode(func_name, ret_type, bool_block_node, asm_code)})
+                return AssemblyNode(func_name, ret_type, bool_block_node, asm_code)
     # needs types
     def __struct(self, e_struct=False):
         typedef = False
@@ -798,7 +827,7 @@ class Parser:
                 while self.__current_token.type_ != TT_RCURL and self.__current_token != None:
                     tok = self.__current_token
                     if tok.value == "int":
-                        node = self.__assign(tok.value)
+                        node = self.__assign(tok.value, struct_decl=[True, name])
                     elif tok.value == "flt":
                         node = self.__assign(tok.value)
                     elif tok.value == "str":
@@ -1059,7 +1088,7 @@ class Parser:
                     elif tok.type_ == TT_CHAR:
                         bool_block.bool_statement += f"'{tok.value}'"
                         self.__advance()
-                    elif tok.type_ == TT_ID and tok.value in self.VARS:
+                    elif tok.type_ == TT_ID:
                         bool_block.bool_statement += str(self.__expr())
                     elif tok.type_ == TT_KAND:
                         bool_block.bool_statement += "&"
@@ -1095,17 +1124,19 @@ class Parser:
                         self.__advance()
                         break
                     else:
-                        NewError("IllegalBoolStatement", "An illegal bool statement was found: ", tok)
+                        NewError("IllegalBoolStatement", "An illegal bool statement was found: ", f"at {tok.section} at ln {tok.ln_count}")
                 if self.__current_token.type_ == TT_LCURL:
                     code_block = CodeBlock()
                     self.__advance()
                     while self.__current_token.type_ != TT_RCURL:
                         code_block = self.__check_and_make_type(code_block)
+                        #print(code_block)
                     self.__advance()
                 else:
                     NewError("NoCodeBlockError", "No Code block '{}' was started but one was expected")
             else:
                 NewError("NoSemicolonFoundButExpected")
+            #print(self.__current_token)
             return ForNode(cnt_init, bool_block, code_block)
 
     # needs types
