@@ -839,9 +839,9 @@ class Parser:
                     elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
                         node = self.__assign(tok.value, struct_decl=[True, name])
                     elif self.__current_token.value in ("uint8", "uint16", "uint32", "uint64"):
-                        node = self.__assign(self.__current_token.value)
+                        node = self.__assign(self.__current_token.value, struct_decl=[True, name])
                     elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
-                        node = self.__assign(self.__current_token.value)
+                        node = self.__assign(self.__current_token.value, struct_decl=[True, name])
                     else:
                         NewError("IllegalDeclarationError", f"Illegal decleration in struct at {self.__current_token.section} at line {self.__current_token.ln_count}")
                     code_block.add_arg(node)
