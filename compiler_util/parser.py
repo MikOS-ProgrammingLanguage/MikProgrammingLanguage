@@ -460,7 +460,7 @@ class Parser:
         
         return left
     # needs types
-    def __assign(self, type_, name_="", normal_decl=True):
+    def __assign(self, type_, name_="", normal_decl=True, struct_decl=[False, ""]):
         deref = False
         arr_len = ""
         self.__advance()
@@ -471,6 +471,9 @@ class Parser:
             pointer = False
         if self.__current_token.type_ == TT_ID:
             name = self.__current_token.value
+            if struct_decl[0]:
+                name = struct_decl[1]+name
+                print(name)
             if name in self.VARS and self.__get_token(1).type_ != TT_REASGN:
                 NewError("VariableNameDuplicate", f"The variable: {name} is already defined!", self.__current_token.ln_count)
             self.__advance()

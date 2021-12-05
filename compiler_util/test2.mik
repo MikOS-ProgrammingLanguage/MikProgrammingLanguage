@@ -79,7 +79,11 @@ hallo test_struct
 test_struct.inside_struct ?= 50
 test_struct.inside_struct2 ?= 100
 
-int struct_type_refference = test_struct.inside_struct
+uint64 struct_type_refference = test_struct->inside_struct
+
+for (int i ?= 0; i < test_struct.inside_struct) {
+
+}
 
 if (test_struct.inside_struct == 20) {
 
