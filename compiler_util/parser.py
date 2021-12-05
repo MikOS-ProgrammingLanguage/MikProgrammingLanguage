@@ -835,9 +835,9 @@ class Parser:
                     elif tok.value == "char":
                         node = self.__assign(tok.value, struct_decl=[True, name])
                     elif tok.value == "cock":
-                        node = self.__assign(tok.value)
+                        node = self.__assign(tok.value, struct_decl=[True, name])
                     elif tok.value in TYPES and tok.value not in ("int", "flt", "str", "char", "cock"):
-                        node = self.__assign(tok.value)
+                        node = self.__assign(tok.value, struct_decl=[True, name])
                     elif self.__current_token.value in ("uint8", "uint16", "uint32", "uint64"):
                         node = self.__assign(self.__current_token.value)
                     elif self.__current_token.value in ("int8", "int16", "int32", "int64"):
