@@ -1,5 +1,6 @@
 import os.path
 import os
+from posixpath import supports_unicode_filenames
 from config import *
 # handles only relative paths
 yoinked_files = []
@@ -40,6 +41,7 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True, mip_pth=Fals
             w_dir = os.getcwd()+"/"+new_w_str
         start_file = splt_f[len(splt_f)-1]
         new_text += f"@section(\"{start_file}\")\n"
+
     for i in text.split("\n"):
         if i.startswith("#yoink <") and i.endswith(">"):
             i2 = i.split("#yoink <")
@@ -48,7 +50,7 @@ def preprocess(text: str, start_file: str=None, start_f: bool=True, mip_pth=Fals
                 fname = mip_src_path+"/"+PKG_NAME+"/"+fname
             if fname in yoinked_files:
                 continue
-            with open(w_dir+"/"+fname, "r")as file:
+            with open(w_dir+fname, "r")as file:
                 new_text += f"@section(\"{fname}\")\n"
                 content = file.read()
                 content = content.split("\n")
