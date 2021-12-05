@@ -24,7 +24,9 @@ class Generator:
     def generate(self):
         c_code = "int main(void) {"
 		# can give linker errors lel
-        is_n_main_code = "/*char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}*/\ntypedef unsigned long long uint64_t;\ntypedef unsigned int uint32_t;\ntypedef unsigned short uint16_t;\ntypedef unsigned char uint8_t;\ntypedef signed long long int64_t;\ntypedef signed int int32_t;\ntypedef signed short int16_t;\ntypedef signed char int8_t;\n//BUILTIN_END\n\n\n"
+        is_n_main_code = "/*char* strcpy(char* dest, const char* src) {\ndo {*dest++ = *src++;}\nwhile (*src != 0);return 0;}*/\ntypedef unsigned long long uint64_t;\ntypedef unsigned int uint32_t;\ntypedef unsigned short uint16_t;\ntypedef unsigned char uint8_t;\ntypedef signed long long int64_t;\ntypedef signed int int32_t;\ntypedef signed short int16_t;\ntypedef signed char int8_t;\n"
+        is_n_main_code += "_Static_assert(sizeof(uint64_t) == 8, \"uint64_t is not 64 bits\");\n_Static_assert(sizeof(uint32_t) == 4, \"uint32_t is not 32 bits\");\n_Static_assert(sizeof(uint16_t) == 2, \"uint16_t is not 16 bits\");\n_Static_assert(sizeof(uint8_t) == 1, \"uint8_t is not 8 bits\");\n_Static_assert(sizeof(int64_t) == 8, \"int64_t is not 64 bits\");\n_Static_assert(sizeof(int32_t) == 4, \"int32_t is not 32 bits\");\n_Static_assert(sizeof(int16_t) == 2, \"int16_t is not 16 bits\");\n_Static_assert(sizeof(int8_t) == 1, \"int8_t is not 8 bits\");\n"
+        is_n_main_code += "//BUILDIN END\n\n\n"
         # iterate through all nodes and generate code for them
         for i in self.root_node.nodes:
             code = self.__gen(i)
@@ -33,7 +35,7 @@ class Generator:
             else:
                 c_code += str(code[0])
         c_code += "}"
-        return is_n_main_code + (c_code if len(c_code) != len("int main(void) {}") else "")
+        return (is_n_main_code + (c_code if len(c_code) != len("int main(void) {}") else "")).replace(r";;", ";").replace(r"  ", " ")
 
     def __gen(self, node, ign_bin_op=False):
         code_ = None
@@ -123,6 +125,10 @@ class Generator:
             if node.deref:
                 code_ += "&"
             code_ += str(node.tok)
+            if self.is_in_arg_parse:
+                code_ += " "
+            else:
+                ";\n"
             return code_, self.is_n_main
         elif type(node) == NumberNode:
             code_ = ""
@@ -187,7 +193,7 @@ class Generator:
             code_ = str(self.__generate_array_ref(node))
             return code_, self.is_n_main
         else:
-            NewCritical("Ok you fucked with the compiler. STOP IT!")
+            NewCritical("Ok you fucked with the compiler. STOP IT! Why the fuck is there a " + str(type(node)))
 
     def __generate_array_ref(self, node):
         code_ = node.name
@@ -778,7 +784,7 @@ def generate(args):
     else:
         illegal_names = args.nCnfg.split(":")
     parsed, c_types = Parser(lexed, illegal_names=illegal_names).parse()
-    #print(parsed)
+    print(parsed)
     #print(c_types)
     g = Generator(parsed, c_types).generate()
     with open(output_pth+".c", "w") as wf:
